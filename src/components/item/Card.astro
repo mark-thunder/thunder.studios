@@ -1,0 +1,815 @@
+---
+import type { HTMLAttributes, SvgComponent } from "astro/types";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Button from "@/components/Button.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Img from "@/components/media/Img.astro";
+import Icon from "@/components/media/Icon.astro";
+import Overlay from "@/components/media/Overlay.astro";
+import Video from "@/components/media/Video.astro";
+import SocialLinks from "@/components/item/SocialLinks.astro";
+import type { SocialLink } from "@/components/item/SocialLinks.astro";
+import arrow from "@/assets/icons/arrow-diagonal.svg";
+import { plain } from "@/utils/plain.ts";
+import { slotContent } from "@/utils/slots.ts";
+
+type CardVariant =
+  | "default"
+  | "quote"
+  | "cover"
+  | "stacked"
+  | "caption"
+  | "thumb"
+  | "bare"
+  | "row";
+type CardTheme = "inherit" | "light" | "dark" | "brand" | "invert";
+type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+type ImageSource = ImageMetadata | string;
+type ImageRatio =
+  "2-1" | "16-9" | "3-2" | "5-4" | "1-1" | "4-5" | "3-4" | "2-3" | "9-16";
+
+type Base = HTMLAttributes<"div"> & {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Icon above the eyebrow. An imported SVG, rendered inline. */
+  icon?: SvgComponent;
+  /** Eyebrow text. Supports inline markup. */
+  eyebrow?: string;
+  /** Card title. Supports inline markup. */
+  heading?: string;
+  /** Heading level. A bare card's heading is one size smaller. */
+  headingTag?: HeadingTag;
+  /** Body text. Supports inline markup. */
+  text?: string;
+  /** Footer line, such as a date or a client name. Supports inline markup. */
+  meta?: string;
+  /** Profile links shown as icons, for a person's card. */
+  links?: SocialLink[];
+  /** Button label. Omit to hide the button. */
+  buttonLabel?: string;
+  /** Button destination. Omit for a `<button>`. */
+  buttonHref?: string;
+  /** Whole-card link. Ends the card with an arrow instead of a button. */
+  href?: string;
+  /** Card layout. */
+  variant?: CardVariant;
+  /** Color theme of element and its children. */
+  theme?: CardTheme;
+  /** Eyebrow style. */
+  eyebrowVariant?: "default" | "tag";
+};
+
+type Props = Base &
+  (
+    | {
+        /** `quote` centers a review: the mark, the words, a short rule, then who said it in `meta`. */
+        variant?: "default" | "quote";
+        video?: never;
+        image?: never;
+        imageAlt?: never;
+        imageRatio?: never;
+      }
+    | {
+        variant: "bare" | "row";
+        /** A bare card has no surface of its own, so it keeps the theme around it. */
+        theme?: never;
+        video?: never;
+        image?: never;
+        imageAlt?: never;
+        imageRatio?: never;
+      }
+    | {
+        variant: "cover";
+        video?: never;
+        /** Image source. */
+        image?: ImageSource;
+        /** Image alt text. Omit for decorative images. */
+        imageAlt?: string;
+        /**
+         * Aspect ratio of the card, applied with the matching `ratio-*`
+         * utility. Unset, the card is as tall as its content, never shorter
+         * than its minimum height.
+         *
+         * - `2-1`, `16-9` — widescreen
+         * - `3-2`, `5-4`, `1-1` — squarer
+         * - `4-5`, `3-4`, `2-3` — upright, for a phone
+         */
+        imageRatio?: ImageRatio;
+      }
+    | {
+        /** `thumb` sets a small square picture beside a short title, the whole card one link. */
+        variant: "stacked" | "caption" | "thumb";
+        /** Color theme of element and its children. */
+        theme?: never;
+        /**
+         * A silent film looping over the image, on a stacked card. It plays
+         * while the card is on screen, never for people who ask for less
+         * motion, and has its own pause button; the image shows until it
+         * plays and stays as the fallback. It fills the image's frame from
+         * the centre, whatever its own shape.
+         */
+        video?: string | null;
+        /** Image source. */
+        image?: ImageSource;
+        /** Image alt text. Omit for decorative images. */
+        imageAlt?: string;
+        /**
+         * Aspect ratio of the image, applied with the matching `ratio-*`
+         * utility.
+         *
+         * - `2-1`, `16-9` — widescreen
+         * - `3-2`, `5-4`, `1-1` — squarer (`3-2` is the default)
+         * - `4-5`, `3-4`, `2-3`, `9-16` — upright, for a phone
+         */
+        imageRatio?: ImageRatio;
+      }
+  );
+
+type AllProps = Base & {
+  video?: string | null;
+  image?: ImageSource;
+  imageAlt?: string;
+  imageRatio?: ImageRatio;
+};
+
+const {
+  render = true,
+  icon,
+  eyebrow,
+  heading,
+  headingTag = "h3",
+  text,
+  meta,
+  links,
+  buttonLabel,
+  buttonHref,
+  href,
+  variant = "default",
+  theme = "inherit",
+  eyebrowVariant = "default",
+  video,
+  image,
+  imageAlt,
+  imageRatio,
+  class: className,
+  ...rest
+} = Astro.props as AllProps;
+
+const body = render ? await slotContent(Astro.slots) : "";
+
+const hasImage =
+  variant === "cover" ||
+  variant === "stacked" ||
+  variant === "caption" ||
+  variant === "thumb"
+    ? !!image
+    : false;
+const hasFilm = variant === "stacked" && hasImage && !!video;
+const hasFoot = !!(meta || href);
+const hasContent = !!(
+  icon ||
+  eyebrow ||
+  heading ||
+  text ||
+  body ||
+  links?.length ||
+  buttonLabel ||
+  hasFoot
+);
+const hasSurface =
+  variant !== "stacked" &&
+  variant !== "caption" &&
+  variant !== "thumb" &&
+  variant !== "bare" &&
+  variant !== "row";
+const hasTheme = hasSurface && theme !== "inherit";
+
+/* The button each variant closes with, so a set of cards reads as one system.
+   A link carries no emphasis of its own, so the two are picked together. */
+const buttonKind = !hasSurface
+  ? ({ variant: "link" } as const)
+  : ({ emphasis: variant === "cover" ? "primary" : "secondary" } as const);
+
+const linkName = plain(heading ?? meta ?? "");
+
+if (import.meta.env.DEV && render) {
+  if (!hasSurface && theme !== "inherit") {
+    console.warn(
+      `[lumos] <Card variant="${variant}"> has no surface to color, so \`theme\` was dropped. It keeps the theme around it.`,
+    );
+  }
+  if (
+    (variant === "default" ||
+      variant === "quote" ||
+      variant === "bare" ||
+      variant === "row") &&
+    image
+  ) {
+    console.warn(
+      `[lumos] <Card variant="${variant}"> holds no image, so \`image\` was dropped. Use the cover or stacked variant to show it.`,
+    );
+  }
+  if (
+    (variant === "cover" ||
+      variant === "stacked" ||
+      variant === "caption" ||
+      variant === "thumb") &&
+    !image
+  ) {
+    console.warn(
+      `[lumos] <Card variant="${variant}"> has no \`image\`, so it renders as a plain card.`,
+    );
+  }
+  if (href && buttonLabel) {
+    console.warn(
+      "[lumos] <Card> has both `href` and `buttonLabel`; the arrow already links the whole card, so the button was dropped.",
+    );
+  }
+}
+---
+
+{
+  render && (hasContent || hasImage) && (
+    <div
+      class:list={[
+        "card_wrap",
+        variant !== "default" && variant,
+        hasTheme && `theme-${theme}`,
+        variant === "cover" && imageRatio && `ratio-${imageRatio}`,
+        className,
+      ]}
+      {...rest}
+    >
+      {hasImage && (
+        <div
+          class:list={[
+            "card_visual",
+            (variant === "stacked" ||
+              variant === "caption" ||
+              variant === "thumb") &&
+              imageRatio &&
+              `ratio-${imageRatio}`,
+          ]}
+        >
+          {variant === "caption" ? (
+            <span class="card_media">
+              <Img src={image!} alt={imageAlt} animate />
+            </span>
+          ) : (
+            <Img src={image!} alt={imageAlt} animate />
+          )}
+          {variant === "caption" && href && (
+            <span class="card_reveal" aria-hidden="true">
+              <Icon src={arrow} />
+            </span>
+          )}
+          {variant === "cover" && <Overlay variant="gradient" strength={100} />}
+          {hasFilm && (
+            <Fragment>
+              <Video
+                src={video!}
+                variant="auto"
+                autoplay={false}
+                preload="none"
+                class="card_film"
+                aria-hidden="true"
+                data-card-film
+              />
+              <Button
+                variant="play"
+                emphasis="secondary"
+                pressed={false}
+                class="card_film_toggle"
+                data-card-film-toggle
+              />
+            </Fragment>
+          )}
+        </div>
+      )}
+      {hasContent && (
+        <div class="card_content margin-trim">
+          <Icon render={!!icon} class="card_icon" src={icon} variant="xlarge" />
+          <Eyebrow variant={eyebrowVariant}>
+            <Fragment set:html={eyebrow} />
+          </Eyebrow>
+          <Heading
+            tag={headingTag}
+            variant={
+              variant === "row"
+                ? "h3"
+                : variant === "thumb"
+                  ? "h6"
+                  : variant === "bare" || variant === "caption"
+                    ? "h5"
+                    : "h4"
+            }
+          >
+            <Fragment set:html={heading} />
+          </Heading>
+          {variant === "quote" ? (
+            text && (
+              <blockquote class="card_quote">
+                <Paragraph variant="h4">
+                  <Fragment set:html={text} />
+                </Paragraph>
+              </blockquote>
+            )
+          ) : (
+            <Paragraph variant={variant === "caption" ? "small" : "inherit"}>
+              <Fragment set:html={text} />
+            </Paragraph>
+          )}
+          <Fragment set:html={body} />
+          <SocialLinks
+            render={!!links?.length}
+            links={links}
+            variant="small"
+            class="card_links"
+          />
+          {hasFoot && (
+            <div class="card_foot">
+              <Paragraph variant="large" class="card_meta">
+                <Fragment set:html={meta} />
+              </Paragraph>
+              {href && (
+                <a class="card_link" href={href} aria-label={linkName}>
+                  <Icon class="card_mark" src={arrow} variant="small" />
+                </a>
+              )}
+            </div>
+          )}
+          <ButtonWrapper render={!href}>
+            {buttonHref ? (
+              <Button element="link" href={buttonHref} {...buttonKind}>
+                {buttonLabel}
+              </Button>
+            ) : (
+              <Button {...buttonKind}>{buttonLabel}</Button>
+            )}
+          </ButtonWrapper>
+        </div>
+      )}
+    </div>
+  )
+}
+
+<script>
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  for (const film of document.querySelectorAll<HTMLVideoElement>(
+    "[data-card-film]",
+  )) {
+    const visual = film.closest<HTMLElement>(".card_visual");
+    const toggle = visual?.querySelector<HTMLButtonElement>(
+      "[data-card-film-toggle]",
+    );
+    if (!visual || !toggle) continue;
+    let wanted = !still;
+    let seen = false;
+    const sync = () => {
+      if (wanted && seen) film.play().catch(() => set(false));
+      else film.pause();
+    };
+    const set = (playing: boolean) => {
+      wanted = playing;
+      toggle.setAttribute("aria-pressed", String(playing));
+      toggle.setAttribute("aria-label", playing ? "Pause" : "Play");
+      sync();
+    };
+    film.addEventListener("playing", () => visual.classList.add("is-playing"));
+    toggle.addEventListener("click", () => set(!wanted));
+    new IntersectionObserver(([entry]) => {
+      seen = entry.isIntersecting;
+      sync();
+    }).observe(visual);
+    set(wanted);
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    .card_wrap {
+      --_padding: var(--space-5);
+      --_min-height: 0;
+      --_visual-ratio: 3 / 2;
+      width: 100%;
+      min-height: var(--_min-height);
+      display: flex;
+      flex-direction: column;
+      gap: var(--_padding);
+      position: relative;
+      background-color: var(--background-2);
+      border-radius: var(--radius-main);
+      overflow: clip;
+
+      &.cover {
+        --_min-height: 20rem;
+      }
+      &.quote {
+        --_padding: var(--space-8) var(--space-5);
+        --_alignment: center;
+      }
+      &.stacked {
+        gap: var(--space-2);
+        background-color: transparent;
+        overflow: visible;
+      }
+      &.thumb {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-3);
+        background-color: transparent;
+        overflow: visible;
+        &:has(.card_link:focus-visible) {
+          outline: var(--focus-width) solid var(--text);
+          outline-offset: var(--focus-offset);
+        }
+        .card_content {
+          padding: 0;
+        }
+        .card_foot {
+          position: static;
+          width: auto;
+          margin: 0;
+          padding: 0;
+        }
+        .card_link {
+          position: static;
+          outline: 0;
+          &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+          }
+        }
+        .card_mark {
+          display: none;
+        }
+        .card_content > .heading {
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 3;
+          line-clamp: 3;
+          overflow: hidden;
+          font-size: calc(var(--text-large) * 1.17);
+          font-weight: 300;
+          /* The clamp clips to whole lines, so the title keeps its leading
+             (no trim) and a line tall enough for ascenders and descenders:
+             three lines show in full and none of a fourth. */
+          line-height: 1.2;
+          --_trim-top: 0.5lh;
+          --_trim-bottom: 0.5lh;
+          text-decoration-line: underline;
+          text-decoration-color: transparent;
+          text-decoration-thickness: var(--border-width);
+          text-underline-offset: 0.15em;
+          transition: text-decoration-color var(--hover-duration)
+            var(--hover-ease);
+        }
+        transition: scale calc(var(--hover-duration) * 5) var(--hover-ease);
+        @media (hover: hover) {
+          &:hover .card_content > .heading {
+            text-decoration-color: currentcolor;
+          }
+          @media (prefers-reduced-motion: no-preference) {
+            &:hover {
+              scale: 1.05;
+            }
+          }
+        }
+      }
+      &.caption {
+        gap: var(--space-4);
+        background-color: transparent;
+        overflow: visible;
+      }
+      &.row {
+        background-color: transparent;
+        border-radius: 0;
+        border-top: var(--border-width) solid var(--border);
+        overflow: visible;
+        &:last-child {
+          border-bottom: var(--border-width) solid var(--border);
+        }
+      }
+      &.bare {
+        background-color: transparent;
+        border-radius: 0;
+        border-top: var(--border-width) solid var(--border);
+        overflow: visible;
+      }
+
+      /* A row of cards shares one height from the width they sit side by
+         side; stacked below it, or on its own, a card keeps to its content. */
+      @media (width >= 64rem) {
+        .grid > &:not(.quote, .cover, .stacked, .caption, .thumb, .bare, .row) {
+          --_min-height: 28rem;
+        }
+      }
+    }
+
+    .card_visual {
+      position: relative;
+      width: 100%;
+      flex: none;
+      border-radius: inherit;
+      overflow: clip;
+
+      .stacked > &,
+      .caption > & {
+        aspect-ratio: var(--_visual-ratio);
+        min-height: 0;
+      }
+
+      .thumb > & {
+        width: 29%;
+        aspect-ratio: 3 / 2;
+        border-radius: 0;
+      }
+
+      .stacked > & {
+        border-radius: var(--radius-small);
+      }
+
+      .caption > & {
+        border-radius: var(--radius-main);
+      }
+
+      .cover > & {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      > :is(.image, .video) {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    /* The film sits over the image, which shows until the first frame
+       plays and stays if the film never loads. */
+    .card_film {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity calc(var(--hover-duration) * 2) var(--hover-ease);
+
+      .is-playing > & {
+        opacity: 1;
+      }
+    }
+
+    .card_film_toggle {
+      position: absolute;
+      inset-block-end: var(--space-3);
+      inset-inline-end: var(--space-3);
+      z-index: 2;
+    }
+
+    /* Media fills its box, be that the whole card or the band across its top.
+       The component layer puts this above the `height: auto` every image and
+       video starts from. */
+    .card_visual > :is(.image, .video) {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Buttons closing a card sit on its floor, however tall the row around it
+       grows. This outranks the margin `.button-wrapper` sets for itself. */
+    .card_content > .button-wrapper:last-child {
+      margin-top: auto;
+      padding-top: var(--space-6);
+    }
+
+    .card_content {
+      display: flex;
+      flex-direction: column;
+      align-items: var(--_alignment, start);
+      text-align: var(--_alignment, start);
+      flex-grow: 1;
+      width: 100%;
+      max-width: 100%;
+      padding: var(--_padding);
+
+      .quote > & {
+        justify-content: center;
+      }
+
+      .cover > & {
+        z-index: 1;
+        padding: var(--space-3) var(--space-4);
+      }
+
+      .stacked > & {
+        padding: 0;
+      }
+
+      .caption > & {
+        flex-direction: row;
+        align-items: start;
+        gap: var(--site-gutter);
+        padding: 0;
+        > .heading {
+          flex: 0 1 40%;
+          margin: 0;
+        }
+        > .text {
+          flex: 1 1 0;
+          margin: 0;
+          color: var(--text-2);
+        }
+      }
+
+      .bare > & {
+        padding: var(--space-6) 0 0;
+      }
+
+      .row > & {
+        padding: var(--space-6) 0;
+        @media (width >= 64rem) {
+          display: grid;
+          grid-template-columns: 6rem minmax(0, 1.2fr) minmax(0, 1fr) auto;
+          align-items: center;
+          column-gap: var(--site-gutter);
+          > :is(.heading, .text) {
+            margin: 0;
+          }
+          > .eyebrow_wrap {
+            justify-self: start;
+          }
+        }
+      }
+    }
+
+    .card_icon {
+      margin-bottom: var(--space-4);
+
+      .quote > .card_content > & {
+        margin-bottom: var(--space-6);
+      }
+    }
+
+    .card_quote {
+      max-width: 48rem;
+      margin: 0;
+      text-wrap: balance;
+    }
+
+    /* The row of marks clears the text's trim. */
+    .card_links {
+      margin-top: var(--space-3);
+    }
+
+    .card_foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      width: 100%;
+      margin-top: auto;
+      padding-top: var(--space-5);
+
+      .cover > .card_content > &,
+      .stacked > .card_content > & {
+        padding-top: 0;
+      }
+
+      .quote > .card_content > & {
+        flex-direction: column;
+        justify-content: start;
+        gap: var(--space-6);
+        margin-top: 0;
+        padding-top: var(--space-6);
+        &::before {
+          content: "";
+          width: 3rem;
+          border-top: var(--border-width) solid currentcolor;
+        }
+      }
+
+      .caption > .card_content > & {
+        width: auto;
+        margin: 0 0 0 auto;
+        padding-top: 0;
+      }
+
+      .bare > .card_content > &,
+      .stacked > .card_content > :is(.text, .heading) + & {
+        padding-top: var(--space-4);
+      }
+
+      & > .text {
+        margin-top: 0;
+      }
+    }
+
+    .card_mark {
+      --_size: 0.8em;
+    }
+
+    .card_wrap.caption {
+      --_hover: 0;
+      @media (hover: hover) {
+        &:hover {
+          --_hover: 1;
+        }
+      }
+      &:has(.card_link:focus-visible) {
+        --_hover: 1;
+      }
+
+      .card_media {
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform: scale(calc(1 + 0.06 * var(--_hover)));
+        transition: transform calc(var(--hover-duration) * 3) var(--hover-ease);
+        > .image {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      .card_mark {
+        rotate: calc(45deg * var(--_hover));
+        transition: rotate calc(var(--hover-duration) * 2) var(--hover-ease);
+      }
+    }
+
+    .card_reveal {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 6rem;
+      height: 6rem;
+      margin: auto;
+      color: var(--dark-900);
+      background-color: color-mix(in lab, var(--light-200) 75%, transparent);
+      border-radius: var(--radius-round);
+      backdrop-filter: blur(0.3rem);
+      opacity: var(--_hover);
+      scale: calc(0.3 + 0.7 * var(--_hover));
+      pointer-events: none;
+      transition:
+        opacity calc(var(--hover-duration) * 2) var(--hover-ease),
+        scale calc(var(--hover-duration) * 2) var(--hover-ease);
+    }
+
+    .row > .card_content > .card_foot {
+      width: auto;
+      margin: var(--space-4) 0 0;
+      padding: 0;
+      @media (width >= 64rem) {
+        margin: 0;
+      }
+    }
+
+    .row .card_link {
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-round);
+      transition:
+        background-color var(--hover-duration) var(--hover-ease),
+        color var(--hover-duration) var(--hover-ease);
+    }
+
+    @media (hover: hover) {
+      .row:hover .card_link {
+        background-color: var(--text);
+        color: var(--background);
+      }
+    }
+
+    .card_link {
+      display: flex;
+      color: inherit;
+    }
+
+    .card_wrap:has(.button_wrap, .card_link) {
+      .button_wrap::after,
+      .card_link::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+      }
+
+      .card_content a:not(.button_wrap, .card_link) {
+        position: relative;
+        z-index: 1;
+      }
+    }
+  }
+</style>

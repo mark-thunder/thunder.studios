@@ -1,0 +1,282 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { slotContent } from "@/utils/slots.ts";
+
+interface Props extends HTMLAttributes<"form"> {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Form name. */
+  name?: string;
+  /** Form endpoint. Omit to skip submission. */
+  action?: string;
+  /** Message shown after submission. */
+  successMessage?: string;
+  /** Message shown after an error. */
+  errorMessage?: string;
+  /**
+   * Cloudflare Turnstile site key. Set, a verification widget is drawn above
+   * whatever sits in the `submit` slot — the button that sends the form — and
+   * its token is sent as `cf-turnstile-response`.
+   */
+  turnstileSiteKey?: string;
+  /** Verification widget color scheme, to match the surface under it. `inherit` reads the surface as the page loads. Defaults to `dark`. */
+  turnstileTheme?: "light" | "dark" | "inherit";
+  /** Once sent, fade the fields out and bring the note in, then move focus to it. Nothing moves for people who ask for less motion. */
+  animate?: boolean;
+}
+
+const {
+  render = true,
+  name,
+  action,
+  successMessage = "Thanks — we will be in touch.",
+  errorMessage = "Your message did not send, so please try again.",
+  turnstileSiteKey,
+  turnstileTheme = "dark",
+  animate = false,
+  method = "post",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const readSurface = `(() => {
+  const widget = document.currentScript.previousElementSibling;
+  widget.dataset.theme = getComputedStyle(widget).colorScheme.includes("dark") ? "dark" : "light";
+})();`;
+
+const content = render ? await slotContent(Astro.slots) : "";
+const submit = render ? await slotContent(Astro.slots, "submit") : "";
+---
+
+{
+  render && name && content && (
+    <div
+      class:list={["form_wrap", className]}
+      data-state="idle"
+      data-endpoint={action}
+      data-animate={animate || undefined}
+    >
+      <form
+        class="form_fields"
+        name={name}
+        action={action}
+        method={method}
+        {...rest}
+      >
+        <Fragment set:html={content} />
+        {(turnstileSiteKey || submit) && (
+          <div class="form_submit">
+            {turnstileSiteKey && (
+              <div
+                class="form_turnstile cf-turnstile"
+                data-sitekey={turnstileSiteKey}
+                data-theme={
+                  turnstileTheme === "inherit" ? undefined : turnstileTheme
+                }
+                data-size="normal"
+                data-callback="lumosFormVerified"
+                data-expired-callback="lumosFormExpired"
+                data-error-callback="lumosFormExpired"
+              />
+            )}
+            {turnstileSiteKey && turnstileTheme === "inherit" && (
+              <script is:inline set:html={readSurface} />
+            )}
+            <Fragment set:html={submit} />
+          </div>
+        )}
+      </form>
+
+      <p class="form_note form_note-sent text-style-main" role="status">
+        {successMessage}
+      </p>
+      <p class="form_note form_note-failed text-style-main" role="alert">
+        {errorMessage}
+      </p>
+      {turnstileSiteKey && (
+        <p class="form_note form_note-unverified text-style-main" role="alert">
+          Check the “Verify you are human” box above, then send again.
+        </p>
+      )}
+    </div>
+  )
+}
+
+{
+  turnstileSiteKey && (
+    <script
+      is:inline
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    />
+  )
+}
+
+<script>
+  import { gsap, scrollToTarget } from "@/utils/motion.ts";
+
+  declare global {
+    interface Window {
+      turnstile?: { reset: (container?: Element) => void };
+      lumosFormVerified?: () => void;
+      lumosFormExpired?: () => void;
+    }
+  }
+
+  const forms = document.querySelectorAll<HTMLElement>(".form_wrap");
+
+  const ready = (form: HTMLElement) => {
+    const fields = form.querySelector<HTMLFormElement>(".form_fields");
+    const submit = fields?.querySelector<HTMLButtonElement | HTMLInputElement>(
+      'button:not([type]), button[type="submit"], input[type="submit"]',
+    );
+    if (!fields || !submit) return;
+    const widget = fields.querySelector(".form_turnstile");
+    const token = fields.querySelector<HTMLInputElement>(
+      'input[name="cf-turnstile-response"]',
+    );
+    const verified = !widget || !!token?.value;
+    if (verified && form.dataset.state === "unverified") {
+      form.dataset.state = "idle";
+    }
+    submit.disabled = form.dataset.state === "sending";
+  };
+
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+
+  const finish = (form: HTMLElement, fields: HTMLElement) => {
+    const note = form.querySelector<HTMLElement>(".form_note-sent");
+    const sent = () => {
+      form.dataset.state = "sent";
+      if (!note || !form.hasAttribute("data-animate")) return;
+      note.tabIndex = -1;
+      note.focus({ preventScroll: true });
+      scrollToTarget(form);
+    };
+    if (!note || !form.hasAttribute("data-animate") || still.matches) {
+      sent();
+      return;
+    }
+    gsap
+      .timeline()
+      .to(fields, { opacity: 0, y: "-1rem", duration: 0.4, ease: "power1.in" })
+      .add(() => {
+        sent();
+        gsap.set(fields, { clearProps: "opacity,transform" });
+      })
+      .fromTo(
+        note,
+        { opacity: 0, scale: 0.9, transformOrigin: "0% 0%" },
+        { opacity: 1, scale: 1, clearProps: "opacity,transform" },
+      );
+  };
+
+  window.lumosFormVerified = () => forms.forEach(ready);
+  window.lumosFormExpired = () => forms.forEach(ready);
+
+  for (const form of forms) {
+    const fields = form.querySelector<HTMLFormElement>(".form_fields");
+    if (!fields) continue;
+
+    const submit = fields.querySelector<HTMLButtonElement | HTMLInputElement>(
+      'button:not([type]), button[type="submit"], input[type="submit"]',
+    );
+
+    ready(form);
+    fields.addEventListener("input", () => ready(form));
+    fields.addEventListener("change", () => ready(form));
+
+    fields.addEventListener("submit", async (event) => {
+      const endpoint = form.dataset.endpoint;
+
+      if (!fields.checkValidity()) return;
+
+      event.preventDefault();
+      const token = fields.querySelector<HTMLInputElement>(
+        'input[name="cf-turnstile-response"]',
+      );
+      if (fields.querySelector(".form_turnstile") && !token?.value) {
+        form.dataset.state = "unverified";
+        return;
+      }
+      form.dataset.state = "sending";
+      if (submit) submit.disabled = true;
+
+      try {
+        if (endpoint) {
+          const answer = await fetch(endpoint, {
+            method: fields.method || "post",
+            body: new FormData(fields),
+            headers: { Accept: "application/json" },
+          });
+          if (!answer.ok) throw new Error(String(answer.status));
+        }
+        finish(form, fields);
+        form.dispatchEvent(new CustomEvent("form-sent", { bubbles: true }));
+        fields.reset();
+      } catch {
+        form.dataset.state = "failed";
+        /* A Turnstile token is single-use; a fresh one is needed to retry. */
+        const widget = fields.querySelector<HTMLElement>(".form_turnstile");
+        if (widget) window.turnstile?.reset(widget);
+        ready(form);
+      }
+    });
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    .form_wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      width: 100%;
+    }
+
+    .form_fields {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      row-gap: var(--space-8);
+      column-gap: var(--space-8);
+    }
+
+    /* Verification and the button that sends sit together, as one step. */
+    .form_submit {
+      display: flex;
+      flex-direction: column;
+      align-items: var(--_alignment, start);
+      gap: var(--space-4);
+      & > .button-wrapper {
+        margin-top: 0;
+      }
+    }
+
+    .form_note {
+      display: none;
+      padding: var(--space-4) var(--space-5);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-small);
+    }
+
+    .form_wrap[data-state="sent"] {
+      & .form_fields {
+        display: none;
+      }
+      & .form_note-sent {
+        display: block;
+      }
+    }
+
+    .form_wrap[data-state="unverified"] .form_note-unverified {
+      display: block;
+    }
+
+    .form_wrap[data-state="failed"] .form_note-failed {
+      display: block;
+      color: var(--text);
+    }
+  }
+</style>

@@ -1,0 +1,182 @@
+---
+import { actions, getActionPath } from "astro:actions";
+import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Button from "@/components/Button.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Grid from "@/components/wrapper/Grid.astro";
+import Form from "@/components/form/Form.astro";
+import Fieldset from "@/components/form/Fieldset.astro";
+import Input from "@/components/form/Input.astro";
+import Select from "@/components/form/Select.astro";
+import Textarea from "@/components/form/Textarea.astro";
+import Choice from "@/components/form/Choice.astro";
+import FollowUp from "@/components/form/FollowUp.astro";
+import { FOLLOW_UPS } from "@/utils/followUps.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Content layout. `centered` sets the form in one narrow column under its own heading and animates the sent note. */
+  variant?: "form" | "centered";
+  /** Verification widget color scheme, to match the surface under it. `inherit` reads the surface as the page loads. Defaults to `dark`. */
+  turnstileTheme?: "light" | "dark" | "inherit";
+}
+
+const {
+  render = true,
+  variant = "form",
+  turnstileTheme = "dark",
+} = Astro.props;
+
+const centered = variant === "centered";
+const Wrap = centered ? "div" : Fragment;
+
+const followUps = FOLLOW_UPS.map(({ key, question, placeholder }) => ({
+  key,
+  question,
+  placeholder,
+}));
+
+const services = [
+  "Brand Film or Documentary",
+  "Conference / Expo / Summit Coverage",
+  "Podcast Production",
+  "Full-Service Marketing",
+  "Agency / White-Label Production",
+  "Not sure yet",
+];
+
+/* The two questions that tell a real enquiry from a maybe: when and how much. */
+const timelines = [
+  "This month",
+  "In the next 1–3 months",
+  "3+ months out",
+  "Just exploring",
+];
+
+/* One question, two kinds of buyer. The bands say who we are for without a
+   rate card: every price is built to the scope. */
+const budgets = [
+  {
+    group: "One project",
+    options: [
+      "Under $5,000",
+      "$5,000 – $15,000",
+      "$15,000 – $50,000",
+      "$50,000+",
+    ],
+  },
+  {
+    group: "Every month",
+    options: [
+      "Under $5,000 a month",
+      "$5,000 – $10,000 a month",
+      "$10,000 – $20,000 a month",
+      "$20,000+ a month",
+    ],
+  },
+];
+---
+
+{
+  render && (
+    <Wrap {...(centered ? { class: "contact-main_wrap" } : {})}>
+      <Heading render={centered} tag="h2" variant="h4">
+        Get in touch
+      </Heading>
+      <Form
+        name="contact"
+        action={getActionPath(actions.contact)}
+        successMessage="We got your message and will reply within one business day."
+        errorMessage="Your message did not send. Email us directly and we will pick it up there."
+        turnstileSiteKey={PUBLIC_TURNSTILE_SITE_KEY}
+        turnstileTheme={turnstileTheme}
+        animate={centered}
+      >
+        <Fieldset legend="Your enquiry" legendStyle="hidden">
+          <Grid medium={2}>
+            <Input
+              variant="full-name"
+              label="Name"
+              name="name"
+              placeholder=""
+              required
+            />
+            <Input
+              variant="email"
+              label="Email"
+              name="email"
+              placeholder="you@company.com"
+              required
+            />
+          </Grid>
+          <Grid medium={2}>
+            <Input variant="company" name="company" placeholder="" />
+            <Input
+              variant="phone"
+              label="Phone"
+              name="phone"
+              placeholder="(903) 555-0000"
+            />
+          </Grid>
+          <Select
+            label="Service"
+            name="service"
+            placeholder="What do you need?"
+            options={services}
+            required
+          />
+          <Grid medium={2}>
+            <Select
+              label="When do you need it?"
+              name="timeline"
+              placeholder="Pick a timeframe"
+              options={timelines}
+              required
+            />
+            <Select
+              label="Budget range"
+              name="budget"
+              placeholder="Pick a range"
+              options={budgets}
+              required
+            />
+          </Grid>
+          <Textarea
+            label="Tell us about your project"
+            name="message"
+            placeholder="What's the goal? When is it? Any budget in mind?"
+            minLines={5}
+          />
+          <FollowUp questions={followUps} />
+          <Choice
+            name="smsConsent"
+            value="yes"
+            label="Text me about my enquiry at the number above. Message and data rates may apply. Reply STOP to opt out. Not required to work with us."
+          />
+        </Fieldset>
+        <ButtonWrapper slot="submit">
+          <Button type="submit">Send Message</Button>
+        </ButtonWrapper>
+        <Paragraph slot="submit" variant="small" maxWidth={48}>
+          By sending, you agree to our <a href="/privacy">Privacy Policy</a>.
+        </Paragraph>
+      </Form>
+    </Wrap>
+  )
+}
+
+<style is:global>
+  @layer components {
+    .contact-main_wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      width: 100%;
+      max-width: 48rem;
+      margin-inline: auto;
+    }
+  }
+</style>

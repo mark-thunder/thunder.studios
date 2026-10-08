@@ -1,0 +1,126 @@
+---
+import { getImage, imageConfig } from "astro:assets";
+import { isRemoteAllowed } from "astro/assets/utils";
+import type { HTMLAttributes } from "astro/types";
+import { VIEWPORT_MAX } from "@/consts.ts";
+
+type VideoRatio =
+  "2-1" | "16-9" | "3-2" | "5-4" | "1-1" | "4-5" | "3-4" | "2-3" | "9-16";
+
+type Head = Omit<
+  HTMLAttributes<"video">,
+  "src" | "poster" | "loop" | "autoplay" | "muted"
+> & {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Video URL. Omit to render nothing. */
+  src?: string;
+  /** Poster image: an imported asset or a URL. Imports and URLs from an allowed image host are resized. */
+  poster?: ImageMetadata | string;
+};
+
+type Tail = {
+  /** Restart after playback. */
+  loop?: boolean;
+  /** Start automatically. Requires `muted`. */
+  autoplay?: boolean;
+  /** Mute audio. */
+  muted?: boolean;
+  /** Fit without cropping and remove the skeleton tint. */
+  transparent?: boolean;
+};
+
+type Props = Head &
+  (
+    | {
+        /** Aspect ratio. */
+        variant?: VideoRatio;
+        ratio?: never;
+      }
+    | {
+        variant: "custom";
+        /** CSS `aspect-ratio` value. */
+        ratio?: string;
+      }
+    | {
+        variant: "auto";
+        ratio?: never;
+      }
+  ) &
+  Tail;
+
+type AllProps = Head &
+  Tail & {
+    variant?: VideoRatio | "custom" | "auto";
+    ratio?: string;
+  };
+
+const {
+  render = true,
+  src,
+  poster,
+  variant = "16-9",
+  ratio,
+  loop = true,
+  autoplay = true,
+  muted = true,
+  transparent = false,
+  class: className,
+  ...rest
+} = Astro.props as AllProps;
+
+if (import.meta.env.DEV && render) {
+  if (!src) {
+    console.warn(
+      "[lumos] <Video> rendered without a `src`; nothing was output.",
+    );
+  }
+  if (autoplay && !muted) {
+    console.warn(
+      "[lumos] <Video autoplay> without `muted` is blocked by every major browser. Set muted, or drop autoplay and let the viewer start it.",
+    );
+  }
+  if (variant === "custom" && !ratio) {
+    console.warn(
+      '[lumos] <Video variant="custom"> has no `ratio`, so no aspect ratio is applied. Set one, or pick a preset variant.',
+    );
+  }
+}
+
+const isCustom = variant === "custom";
+
+const optimizable =
+  typeof poster !== "string" || isRemoteAllowed(poster, imageConfig);
+
+const posterSrc =
+  poster === undefined || !optimizable
+    ? poster
+    : (
+        await getImage({
+          src: poster,
+          width: VIEWPORT_MAX,
+          ...(typeof poster === "string" && { inferSize: true }),
+        })
+      ).src;
+---
+
+{
+  render && src && (
+    <video
+      src={src}
+      poster={posterSrc}
+      class:list={[
+        "video",
+        !isCustom && `ratio-${variant}`,
+        transparent && "transparent",
+        className,
+      ]}
+      style={isCustom && ratio ? `aspect-ratio: ${ratio};` : undefined}
+      loop={loop}
+      autoplay={autoplay}
+      muted={muted}
+      playsinline
+      {...rest}
+    />
+  )
+}

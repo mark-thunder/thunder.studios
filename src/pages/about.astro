@@ -1,0 +1,212 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Grid from "@/components/wrapper/Grid.astro";
+import Button from "@/components/Button.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Card from "@/components/item/Card.astro";
+import Person from "@/components/item/Person.astro";
+import Img from "@/components/media/Img.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import Accordion from "@/components/interactive/Accordion.astro";
+import AccordionItem from "@/components/interactive/AccordionItem.astro";
+import Counter from "@/components/interactive/Counter.astro";
+import ClientsMain from "@/components/content/ClientsMain.astro";
+import { socialIcons } from "@/utils/icons.ts";
+import { getBusiness } from "@/utils/business.ts";
+import { reviewMark, reviewSite } from "@/utils/reviews.ts";
+import { GOOGLE_REVIEWS_URL, NETWORK_NAMES } from "@/consts.ts";
+import coverA from "@/assets/stand-ins/cover-a.jpg";
+import coverB from "@/assets/stand-ins/cover-b.jpg";
+import coverC from "@/assets/stand-ins/cover-c.jpg";
+import { getPhotos } from "@/utils/photos.ts";
+
+const photos = await getPhotos();
+
+
+/* Stand-ins from the Mizar theme until each portrait is in the Studio. */
+const standIns = [coverA, coverB, coverC];
+
+const [team, points, faq, testimonials, { reviewCount }] = await Promise.all([
+  getCollection("team"),
+  getCollection("points"),
+  getCollection("faq"),
+  getCollection(
+    "testimonials",
+    ({ data }) => reviewSite(data.source) === "google",
+  ),
+  getBusiness(),
+]);
+const teamRatio = team.some(({ data }) => data.film) ? "9-16" : "4-5";
+---
+
+<Layout
+  title="About Our Video Production Crew in Longview"
+  description="Thunder Media is a story-first production company in Longview, Texas. Meet the crew, see how we work, and come visit the studio."
+>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    heading="About"
+    headingVariant="display"
+    align="center"
+  />
+
+  <!-- Picture -->
+  <Section paddingTop="none" paddingBottom="none">
+    <ContentWrapper column1Class="ratio-2-1">
+      <Img src={photos.about.src} loading="eager" animate />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Story -->
+  <Section id="story">
+    <ContentWrapper variant="columns">
+      <Heading tag="h2" variant="h4" class="heading-accent">
+        The story behind <em>Thunder Media.</em>
+      </Heading>
+      <Paragraph slot="column2" variant="h5">
+        We're a story-first production company from Longview, Texas. We make
+        brand films, event coverage and podcasts, and we plan each one before
+        the camera turns on.
+      </Paragraph>
+      <Paragraph slot="column2" variant="large" class="color-faded">
+        Most production companies hand you footage. We hand you a story that
+        gets people to act. Every shoot starts with a plan: what we're saying,
+        who it's for, and what they should do after watching.
+      </Paragraph>
+      <ButtonWrapper slot="column2">
+        <Button element="link" href="/contact">
+          Book a Discovery Call
+        </Button>
+        <Button element="link" href="/work" emphasis="secondary">
+          Our Work
+        </Button>
+      </ButtonWrapper>
+    </ContentWrapper>
+  </Section>
+
+  <!-- Trusted by -->
+  <Section paddingTop="small" paddingBottom="small">
+    <ClientsMain
+      variant="split"
+      label="Trusted by organizations across East Texas and beyond"
+    />
+  </Section>
+
+  <!-- Team -->
+  <Section id="team" paddingTop="large">
+    <ContentWrapper variant="auto-width">
+      <Eyebrow>Our Team</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Meet the crew <em>behind the work.</em>
+      </Heading>
+      <Paragraph slot="column2" maxWidth={32}>
+        We keep the crew small on purpose, so the people who plan your film are
+        the people who shoot and cut it.
+      </Paragraph>
+    </ContentWrapper>
+    <Grid small={2} medium={3} large={5}>
+      {
+        team.map(({ data }, index) => (
+          <Person
+            variant="card"
+            name={data.name}
+            jobTitle={data.role}
+            photo={data.photo ?? standIns[index % standIns.length]}
+            bio={data.bio}
+            film={data.film}
+            ratio={teamRatio}
+            links={data.links?.map(({ network, url }) => ({
+              label: NETWORK_NAMES[network],
+              href: url,
+              icon: socialIcons[network],
+            }))}
+          />
+        ))
+      }
+    </Grid>
+  </Section>
+
+  <!-- Why Thunder -->
+  <Section id="why">
+    <ContentWrapper variant="sticky-content">
+      <Eyebrow>Why Thunder</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Five things we do <em>differently.</em>
+      </Heading>
+      <Grid slot="column2">
+        {
+          points.map(({ data }, index) => (
+            <Card
+              variant="bare"
+              eyebrow={String(index + 1).padStart(2, "0")}
+              heading={data.title}
+              headingTag="h3"
+              text={data.text}
+            />
+          ))
+        }
+      </Grid>
+    </ContentWrapper>
+  </Section>
+
+  <!-- FAQ -->
+  <Section id="faq">
+    <ContentWrapper variant="columns">
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Do you have <em>more questions?</em>
+      </Heading>
+      <Paragraph slot="column2" maxWidth={36}>
+        These are the questions we hear most. Ask us anything else on the call.
+      </Paragraph>
+    </ContentWrapper>
+    <Accordion>
+      {
+        faq.map(({ data }) => (
+          <AccordionItem heading={data.question}>
+            <Paragraph>{data.answer}</Paragraph>
+          </AccordionItem>
+        ))
+      }
+    </Accordion>
+  </Section>
+
+  <!-- Reviews -->
+  <Section id="reviews">
+    <ContentWrapper variant="auto-width">
+      <Eyebrow>Good Words from Good People</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        What our clients <em>say about us.</em>
+      </Heading>
+      <Paragraph slot="column2" variant="h2" render={!!reviewCount}>
+        <Counter value={reviewCount ?? 0} />
+      </Paragraph>
+      <Paragraph slot="column2" render={!!reviewCount}>
+        Five-star reviews left on Google.
+      </Paragraph>
+      <ButtonWrapper slot="column2" marginTop="4">
+        <Button element="link" href={GOOGLE_REVIEWS_URL} variant="link">
+          Read all reviews on Google
+        </Button>
+      </ButtonWrapper>
+    </ContentWrapper>
+    <Grid large={3}>
+      {
+        testimonials.map(({ data }) => (
+          <Card
+            variant="quote"
+            icon={reviewMark(data.source)}
+            text={`“${data.quote}”`}
+            meta={`${data.name} · ${data.source}`}
+          />
+        ))
+      }
+    </Grid>
+  </Section>
+</Layout>

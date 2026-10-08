@@ -1,0 +1,26 @@
+[
+  {
+    "id": "01-best-of-east-texas",
+    "name": "Best of East Texas",
+    "detail": "Video Production",
+    "icon": "trophy"
+  },
+  {
+    "id": "02-locals-love-us",
+    "name": "Locals Love Us",
+    "detail": "Video Taping Services",
+    "icon": "trophy"
+  },
+  {
+    "id": "03-longview-connections",
+    "name": "Featured In",
+    "detail": "Longview Connections",
+    "icon": "star"
+  },
+  {
+    "id": "04-available-globally",
+    "name": "Available Globally",
+    "detail": "We Travel to You",
+    "icon": "globe"
+  }
+]

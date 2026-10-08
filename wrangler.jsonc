@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "thunder-studios",
+  // The owner's account, which holds the thunder.media zone. A Custom Domain
+  // must be on a zone in the same account as the Worker.
+  "account_id": "9894a904b7ae4772659ec4244d268f75",
+  "compatibility_date": "2026-08-13",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  // On-demand rendering: the Astro Cloudflare adapter supplies the Worker
+  // entrypoint and serves the built files as static assets around it. No
+  // `not_found_handling`: a path that is not a file must reach the Worker,
+  // which renders on-demand routes and Astro's own 404 for real misses.
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist",
+  },
+
+  // Public by nature: the widget renders this key into the page.
+  "vars": {
+    "PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAE_OHrQAr_P29f94",
+  },
+
+  "observability": {
+    "enabled": true,
+  },
+}

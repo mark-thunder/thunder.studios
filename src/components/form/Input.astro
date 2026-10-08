@@ -1,0 +1,197 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { slug } from "@/utils/slug.ts";
+
+type InputVariant =
+  | "text"
+  | "full-name"
+  | "first-name"
+  | "last-name"
+  | "company"
+  | "email"
+  | "phone"
+  | "date"
+  | "zip-code"
+  | "number"
+  | "search"
+  | "password"
+  | "url";
+
+interface Props extends Omit<HTMLAttributes<"input">, "type"> {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Field label. Defaults to the variant name. */
+  label?: string;
+  /** Initial value. */
+  value?: string;
+  /** Input type and autofill preset. */
+  variant?: InputVariant;
+  /** Submitted name. Defaults to the label slug. */
+  name?: string;
+  /** Empty-field hint. Defaults to the variant name. */
+  placeholder?: string;
+  /** Require the field and mark its label. */
+  required?: boolean;
+  /** Visually hide the label. */
+  labelHidden?: boolean;
+  /** A short line under the field that says what it takes. It is part of the label, so it is read out with it. The phone variant has one already. */
+  hint?: string;
+}
+
+const {
+  render = true,
+  label,
+  value,
+  variant = "text",
+  name,
+  placeholder,
+  required = false,
+  labelHidden = false,
+  hint,
+  class: className,
+  ...rest
+} = Astro.props;
+
+type InputAttrs = HTMLAttributes<"input">;
+
+const KINDS: Record<
+  InputVariant,
+  {
+    label: string;
+    type: NonNullable<InputAttrs["type"]>;
+    mode: NonNullable<InputAttrs["inputmode"]>;
+    fill: NonNullable<InputAttrs["autocomplete"]>;
+    /* What a valid entry looks like, and the shaping the script applies. */
+    pattern?: string;
+    format?: "phone" | "email";
+    hint?: string;
+    title?: string;
+  }
+> = {
+  text: { label: "Text", type: "text", mode: "text", fill: "on" },
+  "full-name": {
+    label: "Name",
+    type: "text",
+    mode: "text",
+    fill: "name",
+  },
+  "first-name": {
+    label: "First Name",
+    type: "text",
+    mode: "text",
+    fill: "given-name",
+  },
+  "last-name": {
+    label: "Last Name",
+    type: "text",
+    mode: "text",
+    fill: "family-name",
+  },
+  company: {
+    label: "Company",
+    type: "text",
+    mode: "text",
+    fill: "organization",
+  },
+  email: {
+    label: "Email",
+    type: "email",
+    mode: "email",
+    fill: "email",
+    pattern: "[^@\\s]+@[^@\\s]+\\.[^@\\s]+",
+    format: "email",
+    title: "An email address, like you@company.com",
+  },
+  phone: {
+    label: "Phone",
+    type: "tel",
+    mode: "tel",
+    fill: "tel",
+    pattern: "\\(\\d{3}\\) \\d{3}-\\d{4}",
+    format: "phone",
+    hint: "10-digit US number",
+    title: "A 10-digit US number",
+  },
+  date: { label: "Date", type: "date", mode: "text", fill: "bday" },
+  "zip-code": {
+    label: "Zip Code",
+    type: "text",
+    mode: "numeric",
+    fill: "postal-code",
+  },
+  number: { label: "Number", type: "number", mode: "numeric", fill: "off" },
+  search: { label: "Search", type: "search", mode: "search", fill: "off" },
+  password: {
+    label: "Password",
+    type: "password",
+    mode: "text",
+    fill: "current-password",
+  },
+  url: { label: "URL", type: "url", mode: "url", fill: "url" },
+};
+
+const kind = KINDS[variant];
+const text = label ?? kind.label;
+---
+
+{
+  render && (
+    <label class:list={["field", "form-input", className]}>
+      <span
+        class:list={["field-label text-style-main", labelHidden && "sr-only"]}
+      >
+        <span>{text}</span>
+        {required && (
+          <span class="field-star" aria-hidden="true">
+            *
+          </span>
+        )}
+      </span>
+      <input
+        class="field-control text-style-main"
+        type={kind.type}
+        name={name ?? slug(text)}
+        placeholder={placeholder ?? text}
+        inputmode={kind.mode}
+        autocomplete={kind.fill}
+        pattern={kind.pattern}
+        data-format={kind.format}
+        title={kind.title}
+        required={required || undefined}
+        value={value}
+        {...rest}
+      />
+      {(hint ?? kind.hint) && (
+        <span class="field-hint text-style-small">{hint ?? kind.hint}</span>
+      )}
+    </label>
+  )
+}
+
+<script>
+  /* Shapes what is typed so the pattern can pass: a US number becomes
+     (xxx) xxx-xxxx as digits arrive; an address is tidied when the field is
+     left. Nothing is blocked — the pattern still decides validity. */
+  const asPhone = (raw: string) => {
+    const d = raw.replace(/\D/g, "").slice(0, 10);
+    if (d.length < 4) return d;
+    if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  };
+
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[data-format="phone"]',
+  )) {
+    input.addEventListener("input", () => {
+      input.value = asPhone(input.value);
+    });
+  }
+
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[data-format="email"]',
+  )) {
+    input.addEventListener("blur", () => {
+      input.value = input.value.trim().toLowerCase();
+    });
+  }
+</script>

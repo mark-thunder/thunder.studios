@@ -1,0 +1,102 @@
+---
+import Textarea from "@/components/form/Textarea.astro";
+import type { FollowUp } from "@/utils/followUps.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** The questions it can ask, at most one per visit. Nothing renders without one. */
+  questions?: Pick<FollowUp, "key" | "question" | "placeholder">[];
+  /** The name of the field whose answer picks the question. Defaults to `message`. */
+  after?: string;
+}
+
+const { render = true, questions = [], after = "message" } = Astro.props;
+---
+
+{
+  render && questions.length > 0 && (
+    <div class="follow-up_wrap display-contents" data-after={after}>
+      <input type="hidden" name="followUpQuestion" disabled />
+      <p class="follow-up_status text-style-small sr-only" aria-live="polite" />
+      {questions.map(({ key, question, placeholder }) => (
+        <div class="follow-up_item" data-follow-up={key} hidden>
+          <Textarea
+            label={question}
+            name="followUpAnswer"
+            placeholder={placeholder}
+            minLines={2}
+            disabled
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+<script>
+  import { actions } from "astro:actions";
+
+  for (const wrap of document.querySelectorAll<HTMLElement>(
+    ".follow-up_wrap",
+  )) {
+    const form = wrap.closest("form");
+    const source = form?.querySelector<HTMLTextAreaElement>(
+      `[name="${wrap.dataset.after}"]`,
+    );
+    const status = wrap.querySelector<HTMLElement>(".follow-up_status");
+    const asked = wrap.querySelector<HTMLInputElement>(
+      '[name="followUpQuestion"]',
+    );
+    if (!form || !source || !status || !asked) continue;
+
+    const value = (name: string) =>
+      form.querySelector<HTMLSelectElement>(`[name="${name}"]`)?.value ?? "";
+
+    let done = false;
+
+    const say = (text: string) => {
+      status.textContent = text;
+      status.classList.toggle("sr-only", !text);
+    };
+
+    source.addEventListener("change", async () => {
+      const message = source.value.trim();
+      if (done || message.length < 20) return;
+      done = true;
+      say("Reading your project…");
+
+      const { data } = await actions.followUp({
+        service: value("service"),
+        timeline: value("timeline"),
+        budget: value("budget"),
+        message,
+      });
+
+      const item = data?.key
+        ? wrap.querySelector<HTMLElement>(`[data-follow-up="${data.key}"]`)
+        : null;
+      const field = item?.querySelector<HTMLTextAreaElement>("textarea");
+      const label = item?.querySelector(".field-label span");
+
+      if (!item || !field) {
+        say("");
+        return;
+      }
+
+      item.hidden = false;
+      field.disabled = false;
+      asked.disabled = false;
+      asked.value = label?.textContent ?? data!.key!;
+      say("One more question, if you have a moment.");
+    });
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    .follow-up_status {
+      color: var(--text-2);
+    }
+  }
+</style>

@@ -1,0 +1,104 @@
+---
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import Button from "@/components/Button.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import RichText from "@/components/typography/RichText.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import Facts from "@/components/item/Facts.astro";
+import Accordion from "@/components/interactive/Accordion.astro";
+import AccordionItem from "@/components/interactive/AccordionItem.astro";
+import ServicesMain from "@/components/content/ServicesMain.astro";
+import ProcessMain from "@/components/content/ProcessMain.astro";
+import Schema from "@/components/utility/Schema.astro";
+import { LOCATION_ROLES } from "@/consts.ts";
+import { getBusiness } from "@/utils/business.ts";
+import { locationPaths } from "@/utils/paths.ts";
+
+export const getStaticPaths = locationPaths;
+
+const { city, state, role, intro, address, nearby, body, faq, seo } =
+  Astro.props;
+const place = `${city}, ${state}`;
+const { phone, phoneHref } = await getBusiness();
+---
+
+<Layout title={seo.title} description={seo.description}>
+  <Schema slot="head" area={place} />
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    eyebrow={LOCATION_ROLES[role]}
+    heading={`Video production in <em>${place}</em>`}
+    headingVariant="h1"
+    headingMaxWidth={16}
+    text={`<em>${intro}</em>`}
+    align="center"
+  >
+    <Button element="link" href="/contact">Book a Discovery Call</Button>
+    <Button element="link" href={phoneHref} emphasis="secondary">
+      Call {phone}
+    </Button>
+    {
+      address && (
+        <Button
+          element="link"
+          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+          emphasis="secondary"
+        >
+          Get Directions
+        </Button>
+      )
+    }
+  </HeroMain>
+
+  <!-- Location -->
+  <Section id="details" paddingTop="none">
+    <ContentWrapper variant="sticky-content">
+      <Facts
+        items={[
+          { label: "Address", value: address ?? "" },
+          { label: "Also serving", value: nearby?.join(", ") ?? "" },
+          { label: "Phone", value: phone },
+        ]}
+      />
+      <RichText
+        slot="column2"
+        render={!!body?.length}
+        blocks={body ?? []}
+        maxWidth={70}
+        compact
+      />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Services -->
+  <Section id="services" paddingTop="large" gap="7">
+    <ServicesMain variant="rows" />
+  </Section>
+
+  <!-- Local questions -->
+  <Section id="faq" render={!!faq?.length}>
+    <ContentWrapper>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Questions we hear <em>in {city}.</em>
+      </Heading>
+    </ContentWrapper>
+    <Accordion>
+      {
+        faq?.map(({ question, answer }) => (
+          <AccordionItem heading={question}>
+            <Paragraph>{answer}</Paragraph>
+          </AccordionItem>
+        ))
+      }
+    </Accordion>
+  </Section>
+
+  <!-- How we work -->
+  <Section id="process">
+    <ProcessMain variant="numbers" />
+  </Section>
+</Layout>

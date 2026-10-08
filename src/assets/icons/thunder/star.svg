@@ -1,0 +1,9 @@
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M32 8 L36 28 L56 32 L36 36 L32 56 L28 36 L8 32 L28 28 Z" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7">
+<animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="12s" repeatCount="indefinite"/>
+</path>
+<circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.8">
+<animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+</circle>
+</svg>

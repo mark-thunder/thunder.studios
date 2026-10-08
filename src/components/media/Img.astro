@@ -1,0 +1,287 @@
+---
+import { Image, imageConfig } from "astro:assets";
+import { isRemoteAllowed } from "astro/assets/utils";
+import type { LocalImageProps, RemoteImageProps } from "astro:assets";
+import type { HTMLAttributes } from "astro/types";
+import { VIEWPORT_MAX } from "@/consts.ts";
+
+type ImageVariant = "full-width" | "constrained" | "densities";
+
+type ImageQuality = "low" | "mid" | "high" | "max";
+
+type Base = Omit<
+  HTMLAttributes<"img">,
+  "src" | "width" | "height" | "loading" | "fetchpriority"
+> & {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Image source. Imports are optimized; `public/` files are served as-is. */
+  src: ImageMetadata | string;
+  /** Alt text. Omit for decorative images. */
+  alt?: string;
+  /** Display width. The other dimension is inferred.
+   *
+   * @min 1
+   * @int */
+  width?: number;
+  /** Display height. The other dimension is inferred.
+   *
+   * @min 1
+   * @int */
+  height?: number;
+  /** Fit without cropping and remove the skeleton tint. */
+  transparent?: boolean;
+  /**
+   * The point kept in view when `width` and `height` crop the image, as CSS
+   * `x% y%`. A Sanity image's `focus` (from its hotspot) fits as is.
+   * Defaults to the centre.
+   */
+  focus?: string;
+  /** Loading behavior. */
+  loading?: "lazy" | "eager";
+  /** Fetch priority. */
+  fetchPriority?: "auto" | "high" | "low";
+  /**
+   * Scale the image down inside its parent as it scrolls into view. The
+   * parent crops it, so give the image a parent that holds its size.
+   */
+  animate?: boolean;
+};
+
+type Props = Base &
+  (
+    | {
+        /** Responsive image mode. */
+        variant?: "full-width";
+        sizes?: never;
+      }
+    | {
+        variant: "constrained";
+        /** Responsive `sizes` value. */
+        sizes?: string;
+      }
+    | { variant: "densities"; sizes?: never }
+  ) & {
+    /** Output quality. */
+    quality?: ImageQuality;
+  };
+
+type AllProps = Base & {
+  variant?: ImageVariant;
+  sizes?: string;
+  quality?: ImageQuality;
+};
+
+const {
+  render = true,
+  src,
+  alt: altProp,
+  variant = "full-width",
+  width,
+  height,
+  sizes,
+  quality = "high",
+  transparent = false,
+  focus,
+  loading = "lazy",
+  fetchPriority = "auto",
+  animate = false,
+  class: className,
+  ...rest
+} = Astro.props as AllProps;
+
+const attrs = { ...rest, "data-animate": animate ? "" : undefined };
+
+const alt = altProp ?? "";
+
+if (import.meta.env.DEV && !src) {
+  console.warn("[lumos] <Img> rendered without a `src`; nothing was output.");
+}
+
+const isSvg =
+  typeof src === "string" ? /\.svg(\?|#|$)/i.test(src) : src?.format === "svg";
+const resolvedFormat = isSvg ? "svg" : undefined;
+
+const isFetchable = typeof src === "string" && /^https?:\/\//i.test(src);
+const hasBothDimensions = width !== undefined && height !== undefined;
+const hasEitherDimension = width !== undefined || height !== undefined;
+const sizing =
+  isFetchable && !hasBothDimensions
+    ? { inferSize: true as const, width, height }
+    : { width, height };
+
+const isPublicPath = typeof src === "string" && !isFetchable;
+
+if (import.meta.env.DEV && src && (isPublicPath || isSvg)) {
+  const inert: string[] = [];
+  if ((Astro.props as AllProps).quality !== undefined) inert.push("quality");
+  if (sizes !== undefined) inert.push("sizes");
+  if (inert.length) {
+    const why = isPublicPath
+      ? `files in public/ are served as-is — import from src/assets to optimize`
+      : `SVG sources are passed through unoptimized`;
+    console.warn(`[lumos] <Img> ignores ${inert.join(", ")}: ${why}.`);
+  }
+}
+
+if (
+  import.meta.env.DEV &&
+  src &&
+  !isPublicPath &&
+  !isSvg &&
+  variant === "densities" &&
+  !hasEitherDimension
+) {
+  console.warn(
+    `[lumos] <Img variant="densities"> has no width or height, so both densities resolve to the source's own size and each srcset entry points at the same file. Set the size it displays at.`,
+  );
+}
+
+const unoptimizedRemote =
+  isFetchable && !isRemoteAllowed(src as string, imageConfig);
+
+if (import.meta.env.DEV && unoptimizedRemote) {
+  console.warn(
+    `[lumos] <Img src="${src}"> is served as-is: its host is not in image.domains or image.remotePatterns, so it is not resized or converted.`,
+  );
+}
+
+const displayWidth = (width ?? VIEWPORT_MAX) / 16;
+
+const defaultSizes = `(min-width: ${displayWidth}rem) ${displayWidth}rem, 100vw`;
+
+const BREAKPOINTS = [640, 750, 828, 1080, 1280, 1668, 2048, 2560];
+
+const source = typeof src === "string" ? undefined : src;
+const cropsToRatio =
+  source !== undefined && width !== undefined && height !== undefined;
+
+const cropLimit = cropsToRatio
+  ? Math.min(source.width, Math.round(source.height * (width / height)))
+  : undefined;
+
+const withinCrop = (widths: number[]) => {
+  const limit = cropLimit as number;
+  const kept = widths.filter((w) => w <= limit);
+  return kept.at(-1) === limit ? kept : [...kept, limit];
+};
+
+if (import.meta.env.DEV && cropsToRatio) {
+  const dropped = BREAKPOINTS.filter(
+    (w) => w <= (source as ImageMetadata).width && w > (cropLimit as number),
+  );
+  if (variant === "full-width" && dropped.length) {
+    console.warn(
+      `[lumos] <Img> crops to ${width}×${height}, which a ${source!.width}×${source!.height} source can only hold up to ${cropLimit}px wide. Widths ${dropped.join(", ")} were dropped rather than enlarged; a source that tall is needed to serve them.`,
+    );
+  }
+}
+
+const srcset =
+  unoptimizedRemote || isSvg
+    ? { layout: "none" as const }
+    : variant === "densities"
+      ? {
+          densities:
+            cropsToRatio && width * 2 > (cropLimit as number) ? [1] : [1, 2],
+        }
+      : variant === "full-width"
+        ? {
+            layout: variant,
+            ...(cropsToRatio ? { widths: withinCrop(BREAKPOINTS) } : {}),
+            ...(loading === "lazy" ? { sizes: "auto" } : {}),
+          }
+        : {
+            sizes: sizes ?? defaultSizes,
+            layout: variant,
+            ...(cropsToRatio ? { widths: withinCrop([width, width * 2]) } : {}),
+          };
+
+const asIs = isPublicPath || isSvg;
+const plain =
+  typeof src === "string"
+    ? { src, width, height }
+    : {
+        src: src?.src,
+        width: width ?? src?.width,
+        height: height ?? src?.height,
+      };
+
+const classes = [
+  "image",
+  variant === "densities" && "densities",
+  transparent && "transparent",
+  className,
+];
+
+/** The focus as the nearest named position. The build's cropper (sharp) reads names like `left top`, not percentages. */
+const gravity = (point: string) => {
+  const [x, y] = point.split(" ").map(parseFloat);
+  const across = x < 34 ? "left" : x > 66 ? "right" : "";
+  const down = y < 34 ? "top" : y > 66 ? "bottom" : "";
+  return [across, down].filter(Boolean).join(" ") || "center";
+};
+
+const shared = {
+  src,
+  alt,
+  quality: quality === "high" ? undefined : quality,
+  loading,
+  format: resolvedFormat,
+  ...(focus ? { position: gravity(focus) } : {}),
+  ...(fetchPriority !== "auto" ? { fetchpriority: fetchPriority } : {}),
+  ...sizing,
+  ...srcset,
+  ...attrs,
+  "class:list": classes,
+} as unknown as LocalImageProps | RemoteImageProps;
+---
+
+{
+  render &&
+    src &&
+    (asIs ? (
+      <img
+        {...plain}
+        {...{ alt, loading }}
+        fetchpriority={fetchPriority === "auto" ? undefined : fetchPriority}
+        {...attrs}
+        class:list={classes}
+      />
+    ) : (
+      <Image {...shared} />
+    ))
+}
+
+<script>
+  import { gsap, withMotion } from "@/utils/motion.ts";
+
+  withMotion(() => {
+    for (const image of document.querySelectorAll<HTMLElement>(
+      ".image[data-animate]",
+    )) {
+      gsap.fromTo(
+        image,
+        { scale: 1.2 },
+        {
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: image.parentElement,
+            start: "top bottom",
+            end: "center center",
+            scrub: true,
+          },
+        },
+      );
+    }
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    :has(> .image[data-animate]) {
+      overflow: clip;
+    }
+  }
+</style>

@@ -1,0 +1,115 @@
+---
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Button from "@/components/Button.astro";
+import { slotContent } from "@/utils/slots.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Small line of text above the heading. Inline markup is rendered. */
+  eyebrow?: string;
+  /** The section's title. Inline markup is rendered. */
+  heading: string;
+  /** Label of the button under the heading. Nothing renders without one. */
+  buttonLabel?: string;
+  /** Where the button leads. Left out, it renders as a plain button. */
+  buttonHref?: string;
+}
+
+const {
+  render = true,
+  eyebrow,
+  heading,
+  buttonLabel,
+  buttonHref,
+} = Astro.props;
+
+/* The default slot holds the projects: cover `Card`s, in order. The second
+   and third step down the page. */
+const projects = render ? await slotContent(Astro.slots) : "";
+---
+
+{
+  render && heading && projects && (
+    <div class="projects-main_wrap">
+      <ContentWrapper class="projects-main_header">
+        <Eyebrow>
+          <Fragment set:html={eyebrow} />
+        </Eyebrow>
+        <Heading tag="h2">
+          <Fragment set:html={heading} />
+        </Heading>
+        <ButtonWrapper render={!!buttonLabel}>
+          {buttonHref ? (
+            <Button element="link" href={buttonHref} emphasis="secondary">
+              {buttonLabel}
+            </Button>
+          ) : (
+            <Button emphasis="secondary">{buttonLabel}</Button>
+          )}
+        </ButtonWrapper>
+      </ContentWrapper>
+      <div class="projects-main_list">
+        <Fragment set:html={projects} />
+      </div>
+    </div>
+  )
+}
+
+<script>
+  import { revealEach, withMotion } from "@/utils/motion.ts";
+
+  withMotion(() => {
+    for (const list of document.querySelectorAll(".projects-main_list"))
+      revealEach([...list.children]);
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    .projects-main_wrap {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--space-8) var(--site-gutter);
+      align-items: start;
+
+      .projects-main_header {
+        grid-column: span 12;
+      }
+
+      .projects-main_list {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: var(--site-gutter);
+        align-items: start;
+      }
+
+      @media (width >= 48rem) {
+        .projects-main_list {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        /* Steps down by half and a quarter of the card's own width. */
+        .projects-main_list > :nth-child(2) {
+          margin-top: 50%;
+        }
+        .projects-main_list > :nth-child(3) {
+          margin-top: 25%;
+        }
+      }
+
+      @media (width >= 64rem) {
+        .projects-main_header {
+          grid-column: span 3;
+        }
+        .projects-main_list {
+          grid-column: span 9;
+        }
+      }
+    }
+  }
+</style>

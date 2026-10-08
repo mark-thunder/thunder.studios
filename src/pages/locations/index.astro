@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import LocationsMain from "@/components/content/LocationsMain.astro";
+---
+
+<Layout
+  title="Video Production Locations in East Texas"
+  description="Thunder Media films across East Texas from our Longview headquarters, and we travel wherever the story is."
+>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    heading="Locations"
+    headingVariant="display"
+    text="We film across East Texas and beyond. <em>Longview is home, and we travel wherever the story is. Pick your city to see what we do there.</em>"
+    align="center"
+  />
+
+  <!-- Locations -->
+  <Section id="locations" paddingTop="none">
+    <LocationsMain />
+  </Section>
+</Layout>

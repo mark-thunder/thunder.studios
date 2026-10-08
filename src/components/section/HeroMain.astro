@@ -1,0 +1,307 @@
+---
+import type { SvgComponent } from "astro/types";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Card from "@/components/item/Card.astro";
+import Button from "@/components/Button.astro";
+import Icon from "@/components/media/Icon.astro";
+import Img from "@/components/media/Img.astro";
+import Video from "@/components/media/Video.astro";
+import Overlay from "@/components/media/Overlay.astro";
+import { slotContent } from "@/utils/slots.ts";
+
+type ImageSource = ImageMetadata | string;
+
+type Base = {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Small line of text above the heading. Inline markup is rendered. */
+  eyebrow?: string;
+  /** The page's title. Inline markup is rendered, so `em` sets a line in the serif. */
+  heading: string;
+  /**
+   * Type style of the title, chosen apart from its level. Defaults to `h2`.
+   *
+   * - `display`, `h1`, `h2` — the heading sizes
+   */
+  headingVariant?: "display" | "h1" | "h2";
+  /**
+   * Longest line of the title, in characters, before it wraps. Unset, it
+   * fills its column.
+   *
+   * @min 1
+   * @int
+   */
+  headingMaxWidth?: number;
+  /** A line under the title. Inline markup is rendered. */
+  text?: string;
+  /** Hero layout. */
+  variant?: "backdrop" | "lines";
+  /** Where the title sits. Defaults to `start`. */
+  align?: "start" | "center";
+  /**
+   * Reveal the title as the page opens. `blur` brings its lines in from a
+   * blur. Defaults to `true`.
+   */
+  animate?: boolean | "blur";
+};
+
+type Props = Base &
+  (
+    | {
+        variant?: "backdrop";
+        /**
+         * Still behind the hero: an imported asset, a remote `http(s)` URL, or a
+         * path to a file in `public/`. Shown before the film plays, and on its own
+         * when there is no film.
+         */
+        poster: ImageSource;
+        /** Film playing behind the hero. A video file URL; leave unset for the still alone. */
+        video?: string;
+        /**
+         * How much the film or still is darkened so the title reads, as a
+         * percentage. Defaults to 0.
+         *
+         * @min 0
+         * @max 100
+         * @int
+         */
+        dim?: number;
+        /** Name of a project featured beside the title. Nothing is featured without one. */
+        featuredTitle?: string;
+        /** Where the featured project leads. */
+        featuredHref?: string;
+        /** An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
+        featuredImage?: ImageSource;
+        /** Leave unset on decorative images — renders `alt=""`. */
+        featuredImageAlt?: string;
+        /** A wordmark drawn across the foot of the hero. An SVG imported from `src/assets`, rendered inline. */
+        wordmark?: SvgComponent;
+      }
+    | {
+        /** Faint vertical lines on the page's own ground, no picture. */
+        variant: "lines";
+        poster?: never;
+        video?: never;
+        dim?: never;
+        featuredTitle?: never;
+        featuredHref?: never;
+        featuredImage?: never;
+        featuredImageAlt?: never;
+        wordmark?: never;
+      }
+  );
+
+type AllProps = Base & {
+  poster?: ImageSource;
+  video?: string;
+  dim?: number;
+  featuredTitle?: string;
+  featuredHref?: string;
+  featuredImage?: ImageSource;
+  featuredImageAlt?: string;
+  wordmark?: SvgComponent;
+};
+
+const {
+  render = true,
+  eyebrow,
+  heading,
+  headingVariant = "h2",
+  headingMaxWidth,
+  text,
+  variant = "backdrop",
+  poster,
+  video,
+  dim = 0,
+  featuredTitle,
+  featuredHref,
+  featuredImage,
+  featuredImageAlt,
+  wordmark,
+  align = "start",
+  animate = true,
+} = Astro.props as AllProps;
+
+const lines = variant === "lines";
+const buttons = render ? await slotContent(Astro.slots) : "";
+const hasFeatured = !!(featuredTitle && featuredImage);
+---
+
+<Section
+  render={render && !!heading}
+  class:list={["hero-main_wrap", align === "center" && "centered"]}
+  theme={lines ? "inherit" : "dark"}
+  paddingTop="large"
+  paddingBottom={lines ? "medium" : "even"}
+  gap="large"
+  fullHeight={!lines}
+>
+  {
+    lines ? (
+      <Overlay slot="background" variant="lines" />
+    ) : (
+      <div slot="background" class="hero-main_background">
+        {video ? (
+          <Video src={video} poster={poster} variant="auto" />
+        ) : (
+          <Img src={poster!} loading="eager" fetchPriority="high" />
+        )}
+        <Overlay render={dim > 0} strength={dim} />
+      </div>
+    )
+  }
+  <div class:list={["hero-main_layout", align === "center" && "centered"]}>
+    <ContentWrapper
+      class="hero-main_content"
+      centered={align === "center"}
+      animate={animate}
+    >
+      <Eyebrow>
+        <Fragment set:html={eyebrow} />
+      </Eyebrow>
+      <Heading
+        tag="h1"
+        variant={headingVariant}
+        class="heading-accent"
+        maxWidth={headingMaxWidth}
+      >
+        <Fragment set:html={heading} />
+      </Heading>
+      <Paragraph variant="large" class="heading-accent" maxWidth={44}>
+        <Fragment set:html={text} />
+      </Paragraph>
+      <ButtonWrapper render={!!buttons}>
+        <Fragment set:html={buttons} />
+      </ButtonWrapper>
+    </ContentWrapper>
+    <Card
+      render={hasFeatured}
+      class="hero-main_aside"
+      variant="stacked"
+      imageRatio="16-9"
+      image={featuredImage}
+      imageAlt={featuredImageAlt}
+      meta={featuredTitle}
+      href={featuredHref}
+    />
+  </div>
+  <Button
+    render={!lines && !!video}
+    variant="play"
+    emphasis="secondary"
+    pressed={true}
+    class="hero-main_toggle"
+    data-hero-toggle
+  />
+  <Icon
+    render={!!wordmark}
+    src={wordmark}
+    variant="full-width"
+    class="hero-main_wordmark"
+  />
+</Section>
+
+<script>
+  import { gsap, withMotion } from "@/utils/motion.ts";
+
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  for (const toggle of document.querySelectorAll<HTMLButtonElement>(
+    "[data-hero-toggle]",
+  )) {
+    const film = toggle
+      .closest(".hero-main_wrap")
+      ?.querySelector<HTMLVideoElement>(".hero-main_background video");
+    if (!film) continue;
+    const play = (playing: boolean) => {
+      if (playing) film.play().catch(() => play(false));
+      else film.pause();
+      toggle.setAttribute("aria-pressed", String(playing));
+      toggle.setAttribute("aria-label", playing ? "Pause" : "Play");
+    };
+    toggle.addEventListener("click", () => play(film.paused));
+    if (still) play(false);
+  }
+
+  withMotion(() => {
+    for (const hero of document.querySelectorAll(".hero-main_wrap")) {
+      const backdrop = hero.querySelector(".hero-main_background");
+      if (!backdrop) continue;
+      gsap.to(backdrop, {
+        yPercent: 15,
+        scale: 1.08,
+        ease: "none",
+        scrollTrigger: {
+          trigger: hero,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    .hero-main_wrap {
+      justify-content: end;
+      overflow: clip;
+
+      &.centered {
+        justify-content: center;
+      }
+
+      .container:has(> .hero-main_toggle) {
+        position: static;
+      }
+    }
+
+    .hero-main_background > :is(.image, .video) {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-main_layout {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--space-8) var(--site-gutter);
+      align-items: start;
+
+      .hero-main_content,
+      .hero-main_aside {
+        grid-column: span 12;
+      }
+
+      @media (width >= 64rem) {
+        .hero-main_content {
+          grid-column: span 9;
+        }
+        .hero-main_aside {
+          grid-column: span 3;
+        }
+        /* Centred, the title holds the middle eight columns. */
+        &.centered .hero-main_content {
+          grid-column: 3 / span 8;
+        }
+      }
+    }
+
+    .hero-main_toggle {
+      position: absolute;
+      inset-block-end: var(--site-margin);
+      inset-inline-end: var(--site-margin);
+      z-index: 1;
+    }
+
+    .hero-main_wordmark {
+      color: var(--text);
+    }
+  }
+</style>

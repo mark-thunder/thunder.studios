@@ -1,0 +1,89 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { SITE_LOCALE } from "@/consts.ts";
+
+interface Props extends HTMLAttributes<"span"> {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /**
+   * The number it counts up to once it scrolls into view. Shown as-is where
+   * scripts are off or motion is reduced.
+   *
+   * @int
+   */
+  value: number;
+  /** Text after the number, in the same style — `+`, `%`, `k`. */
+  suffix?: string;
+  /**
+   * How long the count takes, in seconds. Defaults to 1.6.
+   *
+   * @min 0
+   */
+  duration?: number;
+}
+
+const {
+  render = true,
+  value,
+  suffix,
+  duration = 1.6,
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+{
+  render && Number.isFinite(value) && (
+    <span
+      class:list={["counter_wrap", className]}
+      data-value={value}
+      data-duration={duration}
+      data-locale={SITE_LOCALE}
+      {...rest}
+    >
+      <span class="counter_value">{value.toLocaleString(SITE_LOCALE)}</span>
+      {suffix && <span class="counter_suffix">{suffix}</span>}
+    </span>
+  )
+}
+
+<script>
+  import { gsap, withMotion, revealStart } from "@/utils/motion.ts";
+
+  withMotion(() => {
+    for (const counter of document.querySelectorAll<HTMLElement>(
+      ".counter_wrap",
+    )) {
+      const target = counter.querySelector<HTMLElement>(".counter_value");
+      const value = Number(counter.dataset.value);
+      const duration = Number(counter.dataset.duration);
+      if (!target || !Number.isFinite(value) || !(duration > 0)) continue;
+
+      const count = { value };
+      const show = () => {
+        target.textContent = count.value.toLocaleString(counter.dataset.locale);
+      };
+      gsap.from(count, {
+        value: 0,
+        duration,
+        snap: { value: 1 },
+        onUpdate: show,
+        scrollTrigger: {
+          trigger: counter,
+          start: (self) => revealStart(self.trigger!),
+          once: true,
+        },
+      });
+      show();
+    }
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    /* Digits keep one width, so the line holds still while it counts. */
+    .counter_wrap {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+import Button from "@/components/Button.astro";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+}
+
+const { render = true } = Astro.props;
+---
+
+{
+  render && (
+    <Fragment>
+      <script is:inline>
+        try {
+          if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("theme-dark");
+          }
+        } catch {}
+      </script>
+      <Button emphasis="secondary" aria-pressed="false" data-theme-toggle>
+        Dark mode
+      </Button>
+    </Fragment>
+  )
+}
+
+<script>
+  const root = document.documentElement;
+
+  for (const toggle of document.querySelectorAll("[data-theme-toggle]")) {
+    const sync = () =>
+      toggle.setAttribute(
+        "aria-pressed",
+        String(root.classList.contains("theme-dark")),
+      );
+    sync();
+    toggle.addEventListener("click", () => {
+      const dark = root.classList.toggle("theme-dark");
+      try {
+        localStorage.setItem("theme", dark ? "dark" : "light");
+      } catch {}
+      sync();
+    });
+  }
+</script>

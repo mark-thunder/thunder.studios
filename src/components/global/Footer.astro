@@ -1,0 +1,446 @@
+---
+import { getCollection } from "astro:content";
+import Img from "@/components/media/Img.astro";
+import Grid from "@/components/wrapper/Grid.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Button from "@/components/Button.astro";
+import SocialLinks from "@/components/item/SocialLinks.astro";
+import logo from "@/assets/logo/thunder-media.png";
+import Heading from "@/components/typography/Heading.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import {
+  NAV_LINKS,
+  LEGAL_LINKS,
+  WORK_KINDS,
+  LOCATION_ROLES,
+  SOCIALS,
+} from "@/consts.ts";
+import { getBusiness } from "@/utils/business.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Footer layout. `cta` is one closing line and a button over the full height, with the social and legal links along the foot. */
+  variant?: "default" | "split" | "cta";
+  /** Color theme of element and its children. */
+  theme?: "inherit" | "light" | "dark" | "brand";
+  /** The closing line of the `cta` layout. */
+  heading?: string;
+  /** Button label of the `cta` layout. */
+  buttonLabel?: string;
+  /** Button destination of the `cta` layout. */
+  buttonHref?: string;
+}
+
+const {
+  render = true,
+  variant = "default",
+  theme = "inherit",
+  heading,
+  buttonLabel,
+  buttonHref = "/contact",
+} = Astro.props;
+const split = variant === "split";
+const cta = variant === "cta";
+
+const [business, services, locations] = await Promise.all([
+  getBusiness(),
+  render ? getCollection("services") : [],
+  render ? getCollection("locations") : [],
+]);
+
+/* Each column is a heading and its links, in the order the site is built:
+   video services, the places we film, then the rest of the site. */
+const columns = [
+  {
+    id: "footer-services",
+    label: "Services",
+    links: [
+      ...WORK_KINDS.filter(({ kind }) =>
+        services.some(({ data }) => data.kind === kind),
+      ).map(({ label, slug }) => ({ label, href: `/services/${slug}` })),
+      { label: "All Services", href: "/services" },
+    ],
+  },
+  {
+    id: "footer-locations",
+    label: "Locations",
+    links: [
+      ...locations.map(({ data }) => ({
+        label:
+          data.role === "service-area"
+            ? `${data.city}, ${data.state}`
+            : `${data.city}, ${data.state} · ${LOCATION_ROLES[data.role]}`,
+        href: `/locations/${data.slug}`,
+      })),
+      { label: "All Locations", href: "/locations" },
+    ],
+  },
+  {
+    id: "footer-company",
+    label: "Company",
+    links: NAV_LINKS.filter(({ href }) => href !== "/" && href !== "/services"),
+  },
+];
+---
+
+{
+  render && (
+    <footer
+      class:list={[
+        "footer_wrap",
+        split && "split",
+        cta && "cta",
+        theme !== "inherit" && `theme-${theme}`,
+      ]}
+    >
+      {cta && (
+        <div class="footer_inner">
+          <ContentWrapper centered class="footer_cta">
+            <Heading tag="h2" variant="display" maxWidth={12}>
+              <Fragment set:html={heading} />
+            </Heading>
+            <ButtonWrapper render={!!buttonLabel}>
+              <Button element="link" href={buttonHref}>
+                {buttonLabel}
+              </Button>
+            </ButtonWrapper>
+          </ContentWrapper>
+          <div class="footer_foot">
+            <ul class="footer_social" aria-label="Social">
+              {SOCIALS.map(({ label, href }) => (
+                <li>
+                  <a class="footer_link" href={href}>
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <ul class="footer_social" aria-label="Legal">
+              {LEGAL_LINKS.map(({ label, href }) => (
+                <li>
+                  <a class="footer_link" href={href}>
+                    {label}
+                  </a>
+                </li>
+              ))}
+              <li>
+                &copy;{new Date().getFullYear()}&#160;{business.name}
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+      {!cta && (
+        <div class="footer_inner">
+          {split && (
+            <div class="footer_split">
+              <div class="footer_side">
+                <Eyebrow variant="tag">Links</Eyebrow>
+                <Grid medium={3} animate={false}>
+                  {columns.map(({ id, label, links }) => (
+                    <nav class="footer_group" aria-labelledby={id}>
+                      <Paragraph id={id} variant="large" class="footer_label">
+                        {label}
+                      </Paragraph>
+                      <ul class="footer_links">
+                        {links.map(({ label, href }) => (
+                          <li>
+                            <a class="footer_link" href={href}>
+                              {label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </nav>
+                  ))}
+                </Grid>
+              </div>
+              <div class="footer_side">
+                <Eyebrow variant="tag">Stay in touch</Eyebrow>
+                <address class="footer_address">
+                  <Button
+                    element="link"
+                    variant="link"
+                    href={business.phoneHref}
+                  >
+                    {business.phone}
+                  </Button>
+                  <Button
+                    element="link"
+                    variant="link"
+                    href={`mailto:${business.email}`}
+                  >
+                    {business.email}
+                  </Button>
+                  <span class="footer_note">{business.addressLine}</span>
+                  {business.hoursLine && (
+                    <span class="footer_note">{business.hoursLine}</span>
+                  )}
+                </address>
+                <SocialLinks variant="small" />
+              </div>
+            </div>
+          )}
+          <Grid medium={2} large={4} animate={false} render={!split}>
+            <div class="footer_group">
+              <a class="footer_logo" href="/" aria-label={business.name}>
+                <Img src={logo} transparent />
+              </a>
+              <address class="footer_address">
+                <span>{business.addressLine}</span>
+                {business.hoursLine && <span>{business.hoursLine}</span>}
+                <a class="footer_link" href={business.phoneHref}>
+                  {business.phone}
+                </a>
+                <a class="footer_link" href={`mailto:${business.email}`}>
+                  {business.email}
+                </a>
+              </address>
+            </div>
+            {columns.map(({ id, label, links }) => (
+              <nav class="footer_group" aria-labelledby={id}>
+                <Paragraph id={id} variant="small" class="footer_label">
+                  {label}
+                </Paragraph>
+                <ul class="footer_links">
+                  {links.map(({ label, href }) => (
+                    <li>
+                      <a class="footer_link" href={href}>
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </Grid>
+          <div class="footer_bottom">
+            <div class="footer_legal">
+              <p class="footer_copyright text-style-small">
+                &copy; <span id="year">{new Date().getFullYear()}</span>&#160;
+                {business.legalName}
+              </p>
+              <ul class="footer_legal_list">
+                {LEGAL_LINKS.map(({ label, href }) => (
+                  <li>
+                    <a class="footer_link text-style-small" href={href}>
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <SocialLinks variant="small" render={!split} />
+          </div>
+        </div>
+      )}
+    </footer>
+  )
+}
+
+<script>
+  const year = document.querySelector<HTMLSpanElement>("#year");
+
+  if (year) {
+    year.textContent = new Date().getFullYear().toString();
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    .footer_wrap {
+      display: flex;
+      justify-content: center;
+      /* The bottom clears the GHL chat bubble fixed to the corner (4.375rem
+         tall, 1.25rem up), so the last row is never under it. */
+      padding-block: var(--section-space-small)
+        max(var(--section-space-small), 6rem);
+      padding-inline: var(--site-margin);
+      background-color: var(--background);
+      color: var(--text);
+      border-top: var(--border-width) solid var(--border);
+    }
+
+    .footer_inner {
+      width: 100%;
+      max-width: var(--max-width-main);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    .footer_group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+
+    .footer_label {
+      color: var(--text-2);
+    }
+
+    .footer_address {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      font-style: normal;
+    }
+
+    /* The mark is a raster with white type baked in; on a light surface it
+       flips to black and keeps its red. An SVG would read currentcolor instead. */
+    html:not(.theme-dark, .theme-brand)
+      .footer_wrap:not(.theme-dark, .theme-brand)
+      .footer_logo
+      > .image {
+      filter: invert(1) hue-rotate(180deg);
+    }
+
+    .footer_logo {
+      display: block;
+      width: 7.5rem;
+      max-width: 100%;
+      transition: opacity var(--hover-duration) var(--hover-ease);
+      @media (hover: hover) {
+        &:hover {
+          opacity: 0.6;
+        }
+      }
+    }
+
+    .footer_links {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      font-weight: var(--primary-medium);
+    }
+
+    .footer_link {
+      color: var(--text-2);
+      text-decoration: none;
+      transition: color var(--hover-duration) var(--hover-ease);
+      @media (hover: hover) {
+        &:hover {
+          color: var(--text);
+        }
+      }
+    }
+
+    .footer_bottom {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3) var(--space-6);
+      padding-top: var(--space-4);
+      border-top: var(--border-width) solid var(--border);
+    }
+
+    /* Baseline, not center: the copyright and the links share one text line
+       whatever height each engine gives the trimmed boxes and list items. */
+    .footer_legal {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-3) var(--space-4);
+      @media (width >= 64rem) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+      }
+    }
+
+    .footer_legal_list {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: var(--space-4);
+    }
+
+    .footer_copyright {
+      color: var(--text-2);
+    }
+
+    .footer_wrap.cta {
+      min-height: 100svh;
+      padding: var(--site-margin) var(--site-margin)
+        max(var(--site-margin), 6rem);
+      border-top: 0;
+
+      .footer_inner {
+        gap: var(--section-space-medium);
+      }
+      .footer_link {
+        color: var(--text);
+      }
+    }
+
+    /* The line fills the space above the foot and centres in it. */
+    .footer_cta {
+      flex-grow: 1;
+      justify-content: center;
+    }
+
+    .footer_foot {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      @media (width >= 64rem) {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+    }
+
+    .footer_social {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2) var(--space-4);
+    }
+
+    .footer_split {
+      display: grid;
+      gap: var(--space-8) var(--section-space-small);
+      @media (width >= 64rem) {
+        grid-template-columns: 1.8fr 1fr;
+      }
+    }
+
+    .footer_side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-7);
+    }
+
+    .footer_wrap.split {
+      border-top: 0;
+
+      .footer_label {
+        width: fit-content;
+        padding-bottom: var(--space-1);
+        color: var(--text);
+        border-bottom: var(--border-width) solid currentcolor;
+      }
+
+      .footer_address {
+        align-items: flex-start;
+        font-size: var(--text-large);
+        gap: var(--space-2);
+      }
+
+      .footer_note {
+        color: var(--text-2);
+        font-size: var(--text-main);
+      }
+
+      .footer_legal_list .footer_link {
+        color: var(--text);
+        border-bottom: var(--border-width) solid currentcolor;
+      }
+    }
+  }
+</style>

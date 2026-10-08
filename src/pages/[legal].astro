@@ -1,0 +1,52 @@
+---
+import { render } from "astro:content";
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import RichText from "@/components/typography/RichText.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import { SITE_LOCALE } from "@/consts.ts";
+import { getBusiness } from "@/utils/business.ts";
+import { legalPaths } from "@/utils/paths.ts";
+
+export const getStaticPaths = legalPaths;
+
+const { page } = Astro.props;
+const { Content } = await render(page);
+const { title, description, updated, status } = page.data;
+const business = await getBusiness();
+const date = updated.toLocaleDateString(SITE_LOCALE, {
+  dateStyle: "long",
+  timeZone: "UTC",
+});
+---
+
+<Layout title={title} description={description} cta={false}>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    eyebrow={status === "draft"
+      ? "Draft for legal review, not yet in force"
+      : "Legal"}
+    heading={title}
+    headingVariant="h1"
+    text={`<em>Last updated ${date}</em>`}
+    align="center"
+  />
+
+  <!-- Policy -->
+  <Section paddingTop="none">
+    <ContentWrapper>
+      <RichText maxWidth={70} compact class="margin-inline-auto">
+        <Content />
+        <h2>Contact</h2>
+        <p>
+          {business.name} is a trade name of {business.legalName}.<br />
+          {business.addressLine}<br />
+          <a href={`mailto:${business.email}`}>{business.email}</a> ·
+          <a href={business.phoneHref}>{business.phone}</a>
+        </p>
+      </RichText>
+    </ContentWrapper>
+  </Section>
+</Layout>

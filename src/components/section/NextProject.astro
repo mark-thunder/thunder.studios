@@ -1,0 +1,194 @@
+---
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Button from "@/components/Button.astro";
+import Img from "@/components/media/Img.astro";
+import Overlay from "@/components/media/Overlay.astro";
+
+type ImageSource = ImageMetadata | string;
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Name of the project it leads to. */
+  heading: string;
+  /** Where the project lives. */
+  href: string;
+  /** An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
+  image: ImageSource;
+  /** Where the button beside it leads. Defaults to `/work`. */
+  backHref?: string;
+}
+
+const { render = true, heading, href, image, backHref = "/work" } = Astro.props;
+---
+
+{
+  render && heading && href && image && (
+    <section class="next-project_wrap theme-dark" aria-label="Next project">
+      <div class="next-project_panel">
+        <a class="next-project_link" href={href}>
+          <div class="next-project_frame" data-next-frame>
+            <Img src={image} class="next-project_image" />
+            <Overlay strength={45} />
+          </div>
+          <div class="next-project_content">
+            <Eyebrow>Next project</Eyebrow>
+            <Heading tag="h2" variant="display" class="next-project_title">
+              {heading}
+            </Heading>
+          </div>
+        </a>
+        <Button
+          element="link"
+          href={backHref}
+          emphasis="secondary"
+          class="next-project_back"
+        >
+          All projects
+        </Button>
+        <div class="next-project_progress" aria-hidden="true">
+          <span class="next-project_bar" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  import { gsap, withMotion } from "@/utils/motion.ts";
+
+  withMotion(() => {
+    for (const section of document.querySelectorAll<HTMLElement>(
+      ".next-project_wrap",
+    )) {
+      const link =
+        section.querySelector<HTMLAnchorElement>(".next-project_link");
+      const frame = section.querySelector<HTMLElement>("[data-next-frame]");
+      const image = section.querySelector(".next-project_image");
+      const bar = section.querySelector(".next-project_bar");
+      if (!link || !frame || !image || !bar) continue;
+
+      let armed = false;
+      const advance = () => {
+        document
+          .querySelector<HTMLElement>("[data-case-cover]")
+          ?.style.setProperty("view-transition-name", "none");
+        frame.style.setProperty("view-transition-name", "case-cover");
+        location.assign(link.href);
+      };
+
+      gsap
+        .timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: true,
+            onUpdate: (self) => {
+              if (self.progress < 0.9) armed = true;
+              if (armed && self.progress === 1 && self.direction === 1) {
+                armed = false;
+                advance();
+              }
+            },
+          },
+        })
+        .fromTo(
+          frame,
+          { clipPath: "inset(30% 30% round 0.5rem)" },
+          { clipPath: "inset(0% 0% round 0rem)", duration: 0.8 },
+          0,
+        )
+        .fromTo(image, { scale: 1.3 }, { scale: 1, duration: 0.8 }, 0)
+        .fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 1 }, 0);
+    }
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    [data-case-cover] {
+      view-transition-name: case-cover;
+    }
+
+    .next-project_wrap {
+      height: 200svh;
+      background-color: var(--background);
+      color: var(--text);
+
+      @media (prefers-reduced-motion: reduce) {
+        height: auto;
+      }
+    }
+
+    .next-project_panel {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      overflow: clip;
+
+      @media (prefers-reduced-motion: reduce) {
+        position: relative;
+        height: 80svh;
+      }
+    }
+
+    .next-project_link {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .next-project_frame {
+      position: absolute;
+      inset: 0;
+      overflow: clip;
+
+      > .image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .next-project_content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-inline: var(--site-margin);
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    .next-project_back {
+      position: absolute;
+      inset-inline-start: var(--site-margin);
+      inset-block-end: calc(var(--site-margin) + var(--space-4));
+    }
+
+    .next-project_progress {
+      position: absolute;
+      inset-inline: var(--site-margin);
+      inset-block-end: var(--site-margin);
+      height: var(--border-width);
+      background-color: var(--border);
+
+      @media (prefers-reduced-motion: reduce) {
+        display: none;
+      }
+    }
+
+    .next-project_bar {
+      display: block;
+      height: 100%;
+      background-color: var(--text);
+      transform-origin: left;
+    }
+  }
+</style>

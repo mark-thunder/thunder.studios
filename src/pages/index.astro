@@ -1,0 +1,143 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Button from "@/components/Button.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Card from "@/components/item/Card.astro";
+import Slider from "@/components/interactive/Slider.astro";
+import Img from "@/components/media/Img.astro";
+import Blob from "@/components/media/Blob.astro";
+import Overlay from "@/components/media/Overlay.astro";
+import ClientsMain from "@/components/content/ClientsMain.astro";
+import WorkMain from "@/components/content/WorkMain.astro";
+import ServicesMain from "@/components/content/ServicesMain.astro";
+import { mixReviews, reviewMark } from "@/utils/reviews.ts";
+import { serviceTiles } from "./_tiles.ts";
+import { getPhotos } from "@/utils/photos.ts";
+
+const photos = await getPhotos();
+
+
+const [tiles, testimonials] = await Promise.all([
+  serviceTiles(),
+  getCollection("testimonials"),
+]);
+const reviews = mixReviews(
+  testimonials.map(({ data }) => data),
+  2,
+);
+---
+
+<Layout title="Video Production & Event Coverage in East Texas">
+  <!-- Hero -->
+  <Section paddingTop="medium" paddingBottom="large" fullHeight>
+    <Overlay slot="background" variant="lines" />
+    <ContentWrapper variant="columns">
+      <Heading tag="h1" class="heading-accent" maxWidth={12}>
+        Thunder is a<br /><em>story-first</em><br />production co.
+      </Heading>
+      <Paragraph variant="large" class="heading-accent" maxWidth={36}>
+        We make brand films, event coverage and podcasts for businesses across
+        East Texas. <em>Book a 20-minute discovery call today.</em>
+      </Paragraph>
+      <ButtonWrapper>
+        <Button element="link" href="/contact">
+          Book a Discovery Call
+        </Button>
+        <Button element="link" href="/work" emphasis="secondary">
+          Our Work
+        </Button>
+      </ButtonWrapper>
+      <Blob
+        slot="column2"
+        src={photos.onSet.src}
+        alt={photos.onSet.alt}
+        focus={photos.onSet.focus ?? "62% 40%"}
+        loading="eager"
+      />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Trusted by -->
+  <Section paddingTop="small" paddingBottom="small">
+    <ClientsMain
+      variant="split"
+      label="Trusted by organizations across East Texas and beyond"
+    />
+  </Section>
+
+  <!-- Services -->
+  <Section id="services" paddingTop="large" gap="7">
+    <ServicesMain variant="rows" />
+  </Section>
+
+  <!-- Recent work -->
+  <Section id="work" paddingTop="none" align="center">
+    <ContentWrapper centered>
+      <Heading tag="h2">Recent work</Heading>
+    </ContentWrapper>
+    <WorkMain variant="gallery">
+      {
+        tiles.map((tile) => (
+          <Card
+            variant="caption"
+            image={tile.image}
+            imageAlt={tile.imageAlt}
+            heading={tile.label}
+            headingTag="h3"
+            text={tile.text}
+            href={tile.href}
+          />
+        ))
+      }
+    </WorkMain>
+    <ButtonWrapper>
+      <Button element="link" href="/work">See All Work</Button>
+    </ButtonWrapper>
+  </Section>
+
+  <!-- Why Thunder -->
+  <Section id="why" paddingTop="none">
+    <ContentWrapper variant="columns" column2Class="ratio-5-4">
+      <Eyebrow>Why Thunder</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        We don't just <strong>point cameras.</strong>{" "}
+        <em>We tell stories that move people.</em>
+      </Heading>
+      <ButtonWrapper>
+        <Button element="link" href="/about" emphasis="secondary">
+          Our Story
+        </Button>
+      </ButtonWrapper>
+      <Img
+        slot="column2"
+        src={photos.studio.src}
+        alt={photos.studio.alt}
+        width={1440}
+        height={1152}
+        animate
+      />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Reviews -->
+  <Section id="review" paddingTop="none" render={reviews.length > 0}>
+    <Slider label="Reviews" variant="contained" xsmall={1} autoplay={7}>
+      {
+        reviews.map(({ quote, name, source }) => (
+          <Card
+            variant="quote"
+            icon={reviewMark(source)}
+            text={`“${quote}”`}
+            meta={`${name} · ${source}`}
+          />
+        ))
+      }
+    </Slider>
+  </Section>
+</Layout>

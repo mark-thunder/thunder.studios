@@ -1,0 +1,136 @@
+---
+import Img from "@/components/media/Img.astro";
+import Video from "@/components/media/Video.astro";
+import type { ComponentProps } from "astro/types";
+import { youtubeEmbed } from "@/utils/youtube.ts";
+
+type VideoRatio = NonNullable<ComponentProps<typeof Video>["variant"]>;
+
+export type SanityImage = {
+  _type: "image";
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+  focus?: string;
+};
+
+export type SanityVideo = {
+  _type: "video";
+  url: string;
+  title?: string | null;
+  ratio: Exclude<VideoRatio, "custom" | "auto">;
+  poster?: string | null;
+};
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** An image or video from Sanity, resolved by `articleFields`. */
+  node: SanityImage | SanityVideo;
+  /** Media shape. `cover` crops an image to 4:5 on phones and 16:9 from tablets up, around its hotspot. */
+  variant?: "natural" | "cover";
+  /** Loading behavior. */
+  loading?: "lazy" | "eager";
+}
+
+const {
+  render = true,
+  node,
+  variant = "natural",
+  loading = "lazy",
+} = Astro.props;
+
+const cover = variant === "cover" && node._type === "image";
+
+const youtube = node._type === "video" ? youtubeEmbed(node.url) : undefined;
+
+const [w, h] =
+  node._type === "video"
+    ? node.ratio.split("-").map(Number)
+    : [node.width, node.height];
+---
+
+{
+  render && node.url && (
+    <figure
+      class:list={["sanity-media_wrap", cover && "cover"]}
+      style={[
+        `--_ratio: ${w / h};`,
+        node._type === "image" && node.focus && `--image-focus: ${node.focus};`,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {node._type === "video" && youtube ? (
+        <iframe
+          class="sanity-media_embed"
+          src={youtube}
+          title={node.title ?? "Video"}
+          loading={loading}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        />
+      ) : node._type === "video" ? (
+        <Video
+          src={node.url}
+          poster={node.poster ?? undefined}
+          variant={node.ratio}
+          aria-label={node.title ?? undefined}
+          controls
+          preload={loading === "eager" ? "auto" : "metadata"}
+        />
+      ) : (
+        <Img
+          src={node.url}
+          alt={node.alt}
+          width={node.width}
+          height={node.height}
+          loading={loading}
+          fetchPriority={loading === "eager" ? "high" : "auto"}
+          animate
+        />
+      )}
+    </figure>
+  )
+}
+
+<style is:global>
+  @layer components {
+    .sanity-media_wrap {
+      width: min(100%, 85svh * var(--_ratio));
+      border-radius: var(--radius-small);
+      overflow: clip;
+
+      > :is(.image, .video) {
+        width: 100%;
+        height: auto;
+      }
+
+      &.cover {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+
+        > .image {
+          position: absolute;
+          inset: 0;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        @media (width >= 48rem) {
+          aspect-ratio: 16 / 9;
+        }
+      }
+    }
+
+    .sanity-media_embed {
+      display: block;
+      width: 100%;
+      aspect-ratio: var(--_ratio);
+      border: 0;
+    }
+  }
+</style>

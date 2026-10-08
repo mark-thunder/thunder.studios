@@ -1,0 +1,119 @@
+---
+import { getCollection } from "astro:content";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Marquee from "@/components/interactive/Marquee.astro";
+import Img from "@/components/media/Img.astro";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** A line above the strip saying who the logos belong to. Inline markup is rendered. */
+  label?: string;
+  /** Content layout. The split one sets the label beside the strip. */
+  variant?: "stacked" | "split";
+}
+
+const { render = true, label, variant = "stacked" } = Astro.props;
+
+const [clients, studies] = render
+  ? await Promise.all([getCollection("clients"), getCollection("caseStudies")])
+  : [[], []];
+
+const studyFor = (name: string) =>
+  studies.find(({ data }) => data.client.toLowerCase() === name.toLowerCase())
+    ?.data.slug;
+---
+
+{
+  render && clients.length > 0 && (
+    <div class:list={["clients-main_wrap", variant !== "stacked" && variant]}>
+      <Paragraph variant="small" class="clients-main_label" render={!!label}>
+        <Fragment set:html={label} />
+      </Paragraph>
+      <Marquee label="Clients">
+        {clients.map(({ data }) => {
+          const slug = studyFor(data.name);
+          return slug ? (
+            <a
+              class="clients-main_link"
+              href={`/work/${slug}`}
+              aria-label={`${data.name} case study`}
+            >
+              <Img
+                src={data.logo}
+                alt={data.name}
+                width={data.width}
+                height={data.height}
+                transparent
+              />
+            </a>
+          ) : (
+            <Img
+              src={data.logo}
+              alt={data.name}
+              width={data.width}
+              height={data.height}
+              transparent
+            />
+          );
+        })}
+      </Marquee>
+    </div>
+  )
+}
+
+<style is:global>
+  @layer components {
+    .clients-main_wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-6);
+      text-align: center;
+
+      .clients-main_label {
+        color: var(--text-2);
+      }
+
+      /* Every mark in one light tone, whatever colour it arrived in. */
+      .marquee_wrap {
+        --_item-height: 3.25rem;
+      }
+      .marquee_panel > :is(.image, .clients-main_link) {
+        padding-inline: var(--space-4);
+        opacity: 0.4;
+        transition: opacity var(--hover-duration) var(--hover-ease);
+        @media (hover: hover) {
+          &:hover {
+            opacity: 0.75;
+          }
+        }
+      }
+      .marquee_panel .image {
+        filter: var(--logo-filter, brightness(0) invert(1));
+      }
+
+      &.split {
+        text-align: start;
+        @media (width >= 64rem) {
+          display: grid;
+          grid-template-columns: minmax(0, 0.3fr) minmax(0, 1fr);
+          align-items: center;
+          gap: var(--site-gutter);
+        }
+        .clients-main_label {
+          color: var(--text);
+          font-size: var(--text-large);
+        }
+      }
+      .clients-main_link {
+        display: flex;
+        > .image {
+          width: auto;
+          height: var(--_item-height);
+        }
+      }
+    }
+  }
+</style>

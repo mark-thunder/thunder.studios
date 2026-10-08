@@ -1,0 +1,116 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Button from "@/components/Button.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import RichText from "@/components/typography/RichText.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import SanityMedia from "@/components/media/SanityMedia.astro";
+import PostsMain from "@/components/content/PostsMain.astro";
+import Schema from "@/components/utility/Schema.astro";
+import { SITE_LOCALE, WORK_KINDS } from "@/consts.ts";
+import { getBusiness } from "@/utils/business.ts";
+import { postPaths } from "@/utils/paths.ts";
+
+export const getStaticPaths = postPaths;
+
+const { post } = Astro.props;
+const {
+  title,
+  excerpt,
+  kind,
+  publishedAt,
+  updatedAt,
+  author,
+  image,
+  video,
+  body,
+} = post.data;
+const service = WORK_KINDS.find((work) => work.kind === kind)!;
+const hasMore = (await getCollection("posts")).length > 1;
+const { email } = await getBusiness();
+const date = publishedAt.toLocaleDateString(SITE_LOCALE, {
+  dateStyle: "long",
+  timeZone: "UTC",
+});
+---
+
+<Layout title={title} description={excerpt} image={image.url} type="article">
+  <Schema
+    slot="head"
+    article={{
+      headline: title,
+      image: image.url,
+      datePublished: publishedAt,
+      dateModified: updatedAt,
+      author,
+    }}
+  />
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    eyebrow={author ? `${date} · ${author.name}` : date}
+    heading={title}
+    headingVariant="h1"
+    headingMaxWidth={20}
+    text={`<em>${excerpt}</em>`}
+    align="center"
+  >
+    <Button
+      element="link"
+      href={`/services/${service.slug}`}
+      emphasis="secondary"
+    >
+      {service.label}
+    </Button>
+  </HeroMain>
+
+  <!-- Cover -->
+  <Section paddingTop="none" paddingBottom="none" align="center">
+    <SanityMedia
+      node={video
+        ? {
+            ...video,
+            title: video.title ?? title,
+            poster: video.poster ?? image.url,
+          }
+        : image}
+      variant="cover"
+      loading="eager"
+    />
+  </Section>
+
+  <!-- Post -->
+  <Section>
+    <ContentWrapper>
+      <RichText
+        blocks={body}
+        maxWidth={70}
+        compact
+        class="margin-inline-auto"
+      />
+    </ContentWrapper>
+    <ButtonWrapper class="margin-inline-auto">
+      <Button element="link" href={`mailto:${email}`} emphasis="secondary">
+        Email Us
+      </Button>
+      <Button element="link" href="#main" emphasis="secondary">
+        Back to Top
+      </Button>
+    </ButtonWrapper>
+  </Section>
+
+  <!-- More from the blog -->
+  <Section render={hasMore} paddingTop="none">
+    <PostsMain variant="news" exclude={post.data.slug}>
+      <Eyebrow>Blog</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        More notes from <em>the set.</em>
+      </Heading>
+    </PostsMain>
+  </Section>
+</Layout>

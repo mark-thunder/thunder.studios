@@ -1,0 +1,201 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Img from "@/components/media/Img.astro";
+
+type ImageSource = ImageMetadata | string;
+
+interface Props extends HTMLAttributes<"div"> {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
+  src: ImageSource;
+  /** Leave unset on decorative images — renders `alt=""`. */
+  alt?: string;
+  /**
+   * The point kept in view when the image is cut to the blob, as CSS
+   * `x% y%`. A Sanity image's `focus` (from its hotspot) fits as is. Defaults
+   * to the centre.
+   */
+  focus?: string;
+  /** Loading behavior. */
+  loading?: "lazy" | "eager";
+}
+
+const {
+  render = true,
+  src,
+  alt,
+  focus,
+  loading = "lazy",
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+{
+  render && src && (
+    <div
+      class:list={["blob_wrap", className]}
+      style={focus && `--image-focus: ${focus}`}
+      data-focus={focus}
+      {...rest}
+    >
+      <Img
+        class="blob_image"
+        src={src}
+        alt={alt}
+        width={1200}
+        height={1200}
+        focus={focus}
+        loading={loading}
+        fetchPriority={loading === "eager" ? "high" : "auto"}
+      />
+      <canvas class="blob_canvas" aria-hidden="true" />
+    </div>
+  )
+}
+
+<script>
+  import { gsap, withMotion } from "@/utils/motion.ts";
+
+  type Point = [number, number];
+
+  const POINTS = 8;
+  const TAU = Math.PI * 2;
+
+  const midpoint = ([ax, ay]: Point, [bx, by]: Point): Point => [
+    (ax + bx) / 2,
+    (ay + by) / 2,
+  ];
+
+  withMotion(() => {
+    const undo: (() => void)[] = [];
+
+    for (const wrap of document.querySelectorAll<HTMLElement>(".blob_wrap")) {
+      const image = wrap.querySelector<HTMLImageElement>(".blob_image");
+      const canvas = wrap.querySelector<HTMLCanvasElement>(".blob_canvas");
+      const context = canvas?.getContext("2d");
+      if (!image || !canvas || !context) continue;
+
+      const seeds = Array.from({ length: POINTS }, () => ({
+        phase: Math.random() * TAU,
+        speed: 0.5 + Math.random() * 0.5,
+      }));
+      const pointer = { angle: 0, pull: 0 };
+      const source = new Image();
+      const [focusX, focusY] = (wrap.dataset.focus ?? "50% 50%")
+        .split(" ")
+        .map((value) => parseFloat(value) / 100);
+      let size = 0;
+      let visible = false;
+
+      const measure = () => {
+        const ratio = Math.min(devicePixelRatio, 2);
+        size = Math.round(wrap.clientWidth * ratio);
+        canvas.width = size;
+        canvas.height = size;
+      };
+
+      const draw = (time: number) => {
+        if (image.currentSrc && source.src !== image.currentSrc) {
+          source.src = image.currentSrc;
+        }
+        if (!visible || !size || !source.complete || !source.naturalWidth) return;
+        const centre = size / 2;
+        const points = seeds.map(({ phase, speed }, index): Point => {
+          const angle = (index / POINTS) * TAU;
+          const toward = Math.max(0, Math.cos(angle - pointer.angle)) ** 3;
+          const radius =
+            centre *
+            (0.86 + 0.07 * Math.sin(time * speed + phase) + 0.05 * pointer.pull * toward);
+          return [centre + Math.cos(angle) * radius, centre + Math.sin(angle) * radius];
+        });
+
+        context.clearRect(0, 0, size, size);
+        context.save();
+        context.beginPath();
+        context.moveTo(...midpoint(points[POINTS - 1], points[0]));
+        points.forEach((point, index) => {
+          const [x, y] = midpoint(point, points[(index + 1) % POINTS]);
+          context.quadraticCurveTo(point[0], point[1], x, y);
+        });
+        context.closePath();
+        context.clip();
+
+        const { naturalWidth: w, naturalHeight: h } = source;
+        const side = Math.min(w, h);
+        const left = Math.min(Math.max(focusX * w - side / 2, 0), w - side);
+        const top = Math.min(Math.max(focusY * h - side / 2, 0), h - side);
+        context.drawImage(source, left, top, side, side, 0, 0, size, size);
+        context.restore();
+        wrap.dataset.state = "live";
+      };
+
+      const onMove = (event: PointerEvent) => {
+        const box = wrap.getBoundingClientRect();
+        pointer.angle = Math.atan2(
+          event.clientY - box.top - box.height / 2,
+          event.clientX - box.left - box.width / 2,
+        );
+      };
+      const onEnter = () => gsap.to(pointer, { pull: 1, duration: 0.6 });
+      const onLeave = () => gsap.to(pointer, { pull: 0, duration: 0.6 });
+
+      const resized = new ResizeObserver(measure);
+      const seen = new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+      });
+      resized.observe(wrap);
+      seen.observe(wrap);
+      wrap.addEventListener("pointermove", onMove);
+      wrap.addEventListener("pointerenter", onEnter);
+      wrap.addEventListener("pointerleave", onLeave);
+      gsap.ticker.add(draw);
+
+      undo.push(() => {
+        gsap.ticker.remove(draw);
+        resized.disconnect();
+        seen.disconnect();
+        wrap.removeEventListener("pointermove", onMove);
+        wrap.removeEventListener("pointerenter", onEnter);
+        wrap.removeEventListener("pointerleave", onLeave);
+        delete wrap.dataset.state;
+      });
+    }
+
+    return () => undo.forEach((fn) => fn());
+  });
+</script>
+
+<style is:global>
+  @layer components {
+    .blob_wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+
+      .blob_image {
+        width: 100%;
+        height: 100%;
+        border-radius: var(--radius-round);
+      }
+
+      .blob_canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+      }
+
+      &[data-state="live"] {
+        .blob_image {
+          opacity: 0;
+        }
+        .blob_canvas {
+          opacity: 1;
+        }
+      }
+    }
+  }
+</style>

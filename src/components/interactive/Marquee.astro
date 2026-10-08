@@ -1,0 +1,246 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Button from "@/components/Button.astro";
+import { slotContent } from "@/utils/slots.ts";
+
+type Props = HTMLAttributes<"div"> & {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Accessible label. Defaults to `Marquee`. */
+  label?: string;
+  /** Travel direction. */
+  direction?: "forwards" | "backwards";
+};
+
+const {
+  render = true,
+  label = "Marquee",
+  direction = "forwards",
+  class: className,
+  ...rest
+} = Astro.props;
+
+const items = render ? await slotContent(Astro.slots) : "";
+
+/**
+ * Elements at the top of the slot, counted so the animation can scale with
+ * them. Depth is tracked because only the outermost elements are items, and
+ * the ones that never close are skipped rather than left holding the count
+ * open. Comments are already stripped by `slotContent`.
+ */
+const VOID = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+const countItems = (html: string) => {
+  let depth = 0;
+  let count = 0;
+  for (const [, closing, name, , selfClosing] of html.matchAll(
+    /<(\/?)([a-zA-Z][^\s/>]*)([^>]*?)(\/?)>/g,
+  )) {
+    if (closing) {
+      depth = Math.max(0, depth - 1);
+      continue;
+    }
+    if (depth === 0) count += 1;
+    if (!selfClosing && !VOID.has(name.toLowerCase())) depth += 1;
+  }
+  return count;
+};
+
+const count = countItems(items);
+
+const duration = count * 4;
+---
+
+{
+  render && items && (
+    <div
+      class:list={[
+        "marquee_wrap",
+        direction !== "forwards" && direction,
+        className,
+      ]}
+      data-duration={duration}
+      role="group"
+      aria-label={label}
+      {...rest}
+    >
+      <div class="marquee_viewport">
+        <div class="marquee_track">
+          <div class="marquee_panel">
+            <Fragment set:html={items} />
+          </div>
+          {/* The copy that carries the loop. Astro renders it, so the strip is
+            whole before any script runs, and it is held out of the accessibility
+            tree and the tab order so nothing here is met twice. */}
+          <div class="marquee_panel" aria-hidden="true" inert>
+            <Fragment set:html={items} />
+          </div>
+        </div>
+      </div>
+
+      <Button
+        variant="play"
+        emphasis="secondary"
+        pressed={true}
+        class="marquee_toggle"
+        data-marquee-toggle
+      />
+    </div>
+  )
+}
+
+<script>
+  import { gsap, ScrollTrigger } from "@/utils/motion.ts";
+
+  for (const marquee of document.querySelectorAll<HTMLElement>(
+    ".marquee_wrap",
+  )) {
+    const track = marquee.querySelector<HTMLElement>(".marquee_track");
+    const panel = marquee.querySelector<HTMLElement>(".marquee_panel");
+    const toggle = marquee.querySelector<HTMLButtonElement>(
+      "[data-marquee-toggle]",
+    );
+    if (!track || !panel || !toggle) continue;
+
+    const distance = () =>
+      panel.offsetWidth + parseFloat(getComputedStyle(track).columnGap);
+    const backwards = marquee.classList.contains("backwards");
+    const loop = gsap.fromTo(
+      track,
+      { x: () => (backwards ? -distance() : 0) },
+      {
+        x: () => (backwards ? 0 : -distance()),
+        duration: Number(marquee.dataset.duration) || 20,
+        ease: "none",
+        repeat: -1,
+        paused: true,
+      },
+    );
+
+    let playing = false;
+    let onScreen = false;
+    let focused = false;
+
+    const sync = () => {
+      if (playing && onScreen && !focused) loop.play();
+      else loop.pause();
+    };
+
+    const setPlaying = (value: boolean) => {
+      playing = value;
+      marquee.dataset.state = value ? "playing" : "paused";
+      toggle.setAttribute("aria-pressed", String(value));
+      toggle.setAttribute("aria-label", value ? "Pause" : "Play");
+      sync();
+    };
+
+    ScrollTrigger.create({
+      trigger: marquee,
+      onRefresh: () => loop.invalidate().progress(loop.progress()),
+      onToggle: (self) => {
+        onScreen = self.isActive;
+        sync();
+      },
+    });
+
+    track.addEventListener("focusin", () => {
+      focused = true;
+      sync();
+    });
+    track.addEventListener("focusout", () => {
+      focused = false;
+      sync();
+    });
+
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    setPlaying(!reduced.matches);
+    reduced.addEventListener("change", () => setPlaying(!reduced.matches));
+
+    toggle.addEventListener("click", () => setPlaying(!playing));
+  }
+</script>
+
+<style is:global>
+  @layer components {
+    .marquee_wrap {
+      --_gap-size: var(--space-6);
+      --_item-height: 3rem;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      width: 100%;
+    }
+
+    /* Clips the strip without swallowing the toggle beside it, and fades what
+       is arriving and leaving rather than cutting it off. */
+    .marquee_viewport {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: clip;
+      /* The width the track measures itself against. */
+      container-type: inline-size;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 3%,
+        black 97%,
+        transparent
+      );
+    }
+
+    .marquee_track {
+      display: flex;
+      width: max-content;
+      align-items: center;
+      gap: var(--_gap-size);
+    }
+
+    .marquee_panel {
+      display: flex;
+      flex: none;
+      /* A panel is never narrower than the strip it runs in. That is what keeps
+         the loop full: the track travels one panel and one gap, so the copy has
+         to be wide enough to still cover the strip when the original has left
+         it. A short set spreads across rather than bunching at the start. */
+      min-width: 100cqw;
+      justify-content: space-around;
+      align-items: center;
+      gap: var(--_gap-size);
+
+      /* The type patterns carry block margins that mean nothing in a row. */
+      > * {
+        flex: none;
+        margin-block: 0;
+      }
+
+      /* Media fills its container by default, which here is the whole strip.
+         A height instead of a width keeps every item on one line and, with the
+         ratio the markup already carries, holds the space before the file
+         arrives — a panel that changes width once an image loads would break
+         the loop. Override with --_item-height. */
+      > :is(.image, .video) {
+        width: auto;
+        height: var(--_item-height);
+      }
+    }
+
+    .marquee_toggle {
+      flex: none;
+    }
+  }
+</style>

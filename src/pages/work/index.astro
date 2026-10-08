@@ -1,0 +1,53 @@
+---
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import Card from "@/components/item/Card.astro";
+import ClientsMain from "@/components/content/ClientsMain.astro";
+import WorkMain from "@/components/content/WorkMain.astro";
+import { serviceTiles } from "../_tiles.ts";
+
+const tiles = await serviceTiles();
+---
+
+<Layout
+  title="Our Work: Brand Films & Event Coverage"
+  description="Brand films, event coverage and podcasts by Thunder Media for organizations across East Texas and beyond."
+>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    heading="Our Work"
+    headingVariant="display"
+    text="<em>Films that sell in the room, event coverage people come back to, and podcasts ready for every platform.</em>"
+    align="center"
+    animate="blur"
+  />
+
+  <!-- Case studies and services -->
+  <Section id="case-studies" paddingTop="none">
+    <WorkMain variant="gallery" headingTag="h2">
+      {
+        tiles.map((tile) => (
+          <Card
+            variant="caption"
+            image={tile.image}
+            imageAlt={tile.imageAlt}
+            heading={tile.label}
+            headingTag="h2"
+            text={tile.text}
+            href={tile.href}
+          />
+        ))
+      }
+    </WorkMain>
+  </Section>
+
+  <!-- Trusted by -->
+  <Section paddingTop="small" paddingBottom="small">
+    <ClientsMain
+      variant="split"
+      label="Trusted by organizations across East Texas and beyond"
+    />
+  </Section>
+</Layout>

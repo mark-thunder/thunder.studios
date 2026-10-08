@@ -1,0 +1,30 @@
+---
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+}
+
+const { render = true } = Astro.props;
+---
+
+{render && <span hidden data-smooth-scroll />}
+
+<script>
+  import "lenis/dist/lenis.css";
+  import { ScrollTrigger, startSmoothScroll } from "@/utils/motion.ts";
+
+  if (document.querySelector("[data-smooth-scroll]")) {
+    const [entry] = performance.getEntriesByType(
+      "navigation",
+    ) as PerformanceNavigationTiming[];
+    if (entry?.type === "reload" && !location.hash) {
+      ScrollTrigger.clearScrollMemory("manual");
+      scrollTo(0, 0);
+      addEventListener("pagehide", () => {
+        history.scrollRestoration = "auto";
+      });
+    }
+
+    startSmoothScroll();
+  }
+</script>

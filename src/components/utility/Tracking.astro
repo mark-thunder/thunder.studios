@@ -1,0 +1,68 @@
+---
+import { GA_MEASUREMENT_ID, GHL_TRACKING_ID, GHL_WIDGET_ID } from "@/consts.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. Defaults to the live build only, so dev and Stacki stay untracked. */
+  render?: boolean;
+  /** Offers the chat window, loaded on the visitor's first scroll, tap or key press. Defaults to `true`. */
+  chat?: boolean;
+}
+
+const { render = import.meta.env.PROD, chat = true } = Astro.props;
+
+/* Analytics runs on thunder.media only, so workers.dev previews stay out of
+   the numbers. A sent form (`form-sent` from `Form`) counts as a lead. */
+const analytics = `(() => {
+  if (!/(^|\\.)thunder\\.media$/.test(location.hostname)) return;
+  const { measurementId } = document.currentScript.dataset;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { dataLayer.push(arguments); };
+  gtag("js", new Date());
+  gtag("config", measurementId);
+  const tag = document.createElement("script");
+  tag.async = true;
+  tag.src = "https://www.googletagmanager.com/gtag/js?id=" + measurementId;
+  document.head.append(tag);
+  document.addEventListener("form-sent", () => gtag("event", "generate_lead"));
+})();`;
+
+/* Nothing opens on arrival: the widget loads on the first sign of a person. */
+const chatLoader = `(() => {
+  const { widgetId } = document.currentScript.dataset;
+  const events = ["scroll", "pointerdown", "keydown"];
+  const load = () => {
+    events.forEach((type) => removeEventListener(type, load));
+    const loader = document.createElement("script");
+    loader.src = "https://widgets.leadconnectorhq.com/loader.js";
+    loader.dataset.resourcesUrl = "https://widgets.leadconnectorhq.com/chat-widget/loader.js";
+    loader.dataset.widgetId = widgetId;
+    loader.dataset.source = "WEB_USER";
+    document.body.append(loader);
+  };
+  events.forEach((type) => addEventListener(type, load, { once: true, passive: true }));
+})();`;
+---
+
+{
+  render && (
+    <>
+      <script
+        is:inline
+        data-measurement-id={GA_MEASUREMENT_ID}
+        set:html={analytics}
+      />
+      <script
+        is:inline
+        src="https://link.msgsndr.com/js/external-tracking.js"
+        data-tracking-id={GHL_TRACKING_ID}
+      />
+      {chat && (
+        <script
+          is:inline
+          data-widget-id={GHL_WIDGET_ID}
+          set:html={chatLoader}
+        />
+      )}
+    </>
+  )
+}

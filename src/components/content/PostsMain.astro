@@ -1,0 +1,94 @@
+---
+import { getCollection } from "astro:content";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import Grid from "@/components/wrapper/Grid.astro";
+import Card from "@/components/item/Card.astro";
+import { SITE_LOCALE, WORK_KINDS } from "@/consts.ts";
+import { slotContent } from "@/utils/slots.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** Leave out this post, by its slug, such as the one being read. */
+  exclude?: string;
+  /** Card layout. The news cards leave out the excerpt. The plain cards are text alone (type, title, date), three to a row, the newest three. */
+  variant?: "cards" | "news" | "plain";
+}
+
+const { render = true, exclude, variant = "cards" } = Astro.props;
+
+const posts = render
+  ? (await getCollection("posts", ({ data }) => data.slug !== exclude)).sort(
+      (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+    )
+  : [];
+const header = render && posts.length > 0 ? await slotContent(Astro.slots) : "";
+const action = header && render ? await slotContent(Astro.slots, "action") : "";
+
+const label = (kind: string) =>
+  WORK_KINDS.find((work) => work.kind === kind)?.label;
+const date = (value: Date) =>
+  value.toLocaleDateString(SITE_LOCALE, { dateStyle: "long", timeZone: "UTC" });
+const short = (value: Date) =>
+  value.toLocaleDateString(SITE_LOCALE, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    timeZone: "UTC",
+  });
+const plainCards = variant === "plain";
+---
+
+{
+  render && posts.length > 0 && (
+    <>
+      {header && !action && (
+        <ContentWrapper>
+          <Fragment set:html={header} />
+        </ContentWrapper>
+      )}
+      {header && action && (
+        <ContentWrapper variant="auto-width">
+          <Fragment set:html={header} />
+          <Fragment slot="column2" set:html={action} />
+        </ContentWrapper>
+      )}
+      {plainCards && (
+        <Grid medium={2} large={3}>
+          {posts.slice(0, 3).map(({ data }) => (
+            <Card
+              eyebrow={label(data.kind)}
+              eyebrowVariant="tag"
+              heading={data.title}
+              headingTag={header ? "h3" : "h2"}
+              meta={short(data.publishedAt)}
+              href={`/blog/${data.slug}`}
+            />
+          ))}
+        </Grid>
+      )}
+      <Grid
+        variant="autofill"
+        maxColumnCount={3}
+        minColumnWidth={18}
+        render={!plainCards}
+      >
+        {posts.map(({ data }) => (
+          <Card
+            variant="stacked"
+            image={data.image.url}
+            imageAlt={data.image.alt}
+            eyebrow={label(data.kind)}
+            eyebrowVariant="tag"
+            heading={data.title}
+            headingTag={header ? "h3" : "h2"}
+            text={variant === "news" ? undefined : data.excerpt}
+            meta={date(data.publishedAt)}
+            href={`/blog/${data.slug}`}
+            style={data.image.focus && `--image-focus: ${data.image.focus}`}
+          />
+        ))}
+      </Grid>
+    </>
+  )
+}

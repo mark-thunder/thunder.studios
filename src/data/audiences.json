@@ -1,0 +1,38 @@
+[
+  {
+    "id": "event-organizers",
+    "label": "Event Organizers",
+    "title": "Conferences & Summits",
+    "text": "You've built a premier event. We capture it in a way that grows your audience, attracts sponsors, and justifies every ticket price."
+  },
+  {
+    "id": "growing-brands",
+    "label": "Growing Brands",
+    "title": "Businesses Ready to Scale",
+    "text": "You've outgrown DIY content. You need something that looks like who you are and moves people to act."
+  },
+  {
+    "id": "thought-leaders",
+    "label": "Thought Leaders",
+    "title": "Coaches, Speakers & Consultants",
+    "text": "Your authority lives in how you communicate. A brand film or a podcast builds credibility faster than anything else."
+  },
+  {
+    "id": "agencies",
+    "label": "Agencies",
+    "title": "Marketing Agencies",
+    "text": "We're your white-label crew. You pitch it, we shoot it. We never touch your client relationships."
+  },
+  {
+    "id": "mission-driven",
+    "label": "Mission-Driven",
+    "title": "Non-Profits & Organizations",
+    "text": "Donors give to stories, not statistics. We help you tell the human side of your mission in a way that moves people to act."
+  },
+  {
+    "id": "builders",
+    "label": "Builders",
+    "title": "Contractors & Real Estate",
+    "text": "Show clients the quality of your work before they sign. Property walkthroughs, team content, and company story films."
+  }
+]

@@ -1,0 +1,82 @@
+---
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import RichText from "@/components/typography/RichText.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import Facts from "@/components/item/Facts.astro";
+import Person from "@/components/item/Person.astro";
+import SanityMedia from "@/components/media/SanityMedia.astro";
+import { caseStudyPaths } from "@/utils/paths.ts";
+
+export const getStaticPaths = caseStudyPaths;
+
+const { study } = Astro.props;
+const {
+  title,
+  client,
+  contact,
+  kind,
+  services,
+  year,
+  excerpt,
+  image,
+  video,
+  body,
+} = study.data;
+---
+
+<Layout title={title} description={excerpt}>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    eyebrow={kind ?? "Project"}
+    heading={title}
+    headingVariant="h1"
+    headingMaxWidth={20}
+    text={`<em>${excerpt}</em>`}
+    align="center"
+  />
+
+  <!-- Cover -->
+  <Section paddingTop="none" paddingBottom="none" align="center">
+    <SanityMedia
+      node={video
+        ? {
+            ...video,
+            title: video.title ?? title,
+            poster: video.poster ?? image.url,
+          }
+        : image}
+      loading="eager"
+    />
+  </Section>
+
+  <!-- Case study -->
+  <Section>
+    <ContentWrapper variant="sticky-content">
+      <Person
+        name={contact?.name}
+        jobTitle={contact?.role}
+        photo={contact?.photo}
+      />
+      <Facts
+        slot="column2"
+        items={[
+          { label: "Client", value: client },
+          { label: "Type of work", value: kind ?? "" },
+          { label: "Services", value: services?.join(", ") ?? "" },
+          { label: "Year", value: String(year) },
+        ]}
+      />
+    </ContentWrapper>
+    <ContentWrapper>
+      <RichText
+        blocks={body}
+        maxWidth={70}
+        compact
+        class="margin-inline-auto"
+      />
+    </ContentWrapper>
+  </Section>
+</Layout>

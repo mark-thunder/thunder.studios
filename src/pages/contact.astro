@@ -1,0 +1,29 @@
+---
+export const prerender = false;
+
+import Layout from "@/layouts/BaseLayout.astro";
+import Section from "@/components/wrapper/Section.astro";
+import HeroMain from "@/components/section/HeroMain.astro";
+import ContactMain from "@/components/content/ContactMain.astro";
+---
+
+<Layout
+  title="Contact Us: Book a Discovery Call"
+  chat={false}
+  cta={false}
+  description="Tell Thunder Media what you're working on. We reply within one business day with ideas, options and a clear quote."
+>
+  <!-- Title -->
+  <HeroMain
+    variant="lines"
+    heading="Contact"
+    headingVariant="display"
+    text="Tell us what you're working on. <em>We reply within one business day.</em>"
+    align="center"
+  />
+
+  <!-- Form -->
+  <Section paddingTop="none">
+    <ContactMain variant="centered" turnstileTheme="inherit" />
+  </Section>
+</Layout>

@@ -1,0 +1,71 @@
+---
+import "@/styles/global.css";
+import BaseHead from "@/components/utility/BaseHead.astro";
+import Schema from "@/components/utility/Schema.astro";
+import Tracking from "@/components/utility/Tracking.astro";
+import SmoothScroll from "@/components/utility/SmoothScroll.astro";
+import SkipLink from "@/components/global/SkipLink.astro";
+import Nav from "@/components/global/Nav.astro";
+import Footer from "@/components/global/Footer.astro";
+import Section from "@/components/wrapper/Section.astro";
+import CtaMain from "@/components/content/CtaMain.astro";
+import ThemeToggle from "@/components/interactive/ThemeToggle.astro";
+import type { SeoProps } from "@/types.ts";
+
+type Props = SeoProps & {
+  /** Theme for the whole page. `inherit` leaves the root defaults in place. */
+  theme?: "inherit" | "light" | "dark" | "brand";
+  /**
+   * Fix the nav over the page rather than letting it stick in flow, so the
+   * first section starts underneath it. Give that section
+   * `paddingTop="navoverlap"` to clear the bar.
+   */
+  overlap?: boolean;
+  /** Offers the chat window. Set `false` where a form already asks the same thing. */
+  chat?: boolean;
+  /** Ends the page with the call to book, in a dark card above the footer. Set `false` where the page is the booking itself or a policy. */
+  cta?: boolean;
+  /** Shows the footer. Set `false` where the page ends in its own full-screen section. */
+  footer?: boolean;
+  /** Loads analytics and chat. Defaults to `false`: the site has no analytics account of its own yet. */
+  tracking?: boolean;
+};
+
+const {
+  theme = "inherit",
+  overlap = false,
+  chat = true,
+  cta = true,
+  footer = true,
+  tracking = false,
+  ...seo
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class:list={[theme !== "inherit" && `theme-${theme}`]}>
+  <head>
+    <BaseHead {...seo} />
+    <Schema />
+    <slot name="head" />
+  </head>
+  <body>
+    <SkipLink />
+    <slot name="nav">
+      <Nav variant="full-screen" logo="split" overlap={overlap}>
+        <ThemeToggle />
+      </Nav>
+    </slot>
+    <main id="main" tabindex="-1">
+      <slot />
+      <Section id="start" render={cta}>
+        <CtaMain variant="card" />
+      </Section>
+    </main>
+    <slot name="footer">
+      <Footer variant="split" theme="dark" render={footer} />
+    </slot>
+    <SmoothScroll />
+    <Tracking chat={chat} render={tracking} />
+  </body>
+</html>

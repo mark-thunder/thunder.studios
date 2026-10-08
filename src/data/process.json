@@ -1,0 +1,30 @@
+[
+  {
+    "id": "discovery",
+    "step": "Step 01",
+    "title": "Discovery Call",
+    "text": "In 20 minutes we learn your goals, audience and timeline, and you learn what's possible and what it costs.",
+    "icon": "call"
+  },
+  {
+    "id": "proposal",
+    "step": "Step 02",
+    "title": "Custom Proposal",
+    "text": "We send tiered options after the call, and you pick the scope that fits. Every cost is in the proposal.",
+    "icon": "proposal"
+  },
+  {
+    "id": "production",
+    "step": "Step 03",
+    "title": "Production Day",
+    "text": "We show up prepared and handle the gear, the direction and the logistics. All you need to do is be yourself.",
+    "icon": "production"
+  },
+  {
+    "id": "delivery",
+    "step": "Step 04",
+    "title": "Delivery",
+    "text": "You get the final files by private Frame.io link, at full resolution. They're yours to keep, with no licensing strings attached.",
+    "icon": "trophy"
+  }
+]

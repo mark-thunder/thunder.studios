@@ -1,0 +1,234 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Img from "@/components/media/Img.astro";
+import Modal from "@/components/interactive/Modal.astro";
+import Card from "@/components/item/Card.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import type { SocialLink } from "@/components/item/SocialLinks.astro";
+import { uid } from "@/utils/unique-id.ts";
+
+type Base = HTMLAttributes<"div"> & {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** The person's name. */
+  name?: string | null;
+  /** What they do, such as Owner. */
+  jobTitle?: string | null;
+  /** A photo of them; clicking it opens it larger. Omit to show the name alone. */
+  photo?: ImageMetadata | string | null;
+  /** A few lines on who they are, shown under the larger photo. */
+  bio?: string | null;
+};
+
+type Props = Base &
+  (
+    | {
+        /** Person layout. `card` is a portrait card for a team grid. */
+        variant?: "default";
+        links?: never;
+      }
+    | {
+        variant: "card";
+        /** Profile links shown as icons under the job title. */
+        links?: SocialLink[];
+        /**
+         * A silent clip of them at work, looping in the card over the photo,
+         * which stays as the fallback. An .mp4 URL.
+         */
+        film?: string | null;
+        /** Shape of the picture. Give every card in a team the same one, so they line up. Defaults to `4-5`. */
+        ratio?: "4-5" | "9-16";
+      }
+  );
+
+type AllProps = Base & {
+  variant?: "default" | "card";
+  links?: SocialLink[];
+  film?: string | null;
+  ratio?: "4-5" | "9-16";
+};
+
+const {
+  render = true,
+  name,
+  jobTitle,
+  photo,
+  bio,
+  variant = "default",
+  links,
+  film,
+  ratio = "4-5",
+  class: className,
+  ...rest
+} = Astro.props as AllProps;
+
+const modalId = uid("person");
+const hasModal = !!(photo || bio);
+---
+
+{
+  render && name && (
+    <div
+      class:list={["person_wrap", variant !== "default" && variant, className]}
+      {...rest}
+    >
+      {variant === "card" && photo && (
+        <Card
+          variant="stacked"
+          imageRatio={ratio}
+          image={photo}
+          video={film}
+          imageAlt={name}
+          heading={name}
+          headingTag="h3"
+          text={jobTitle ?? undefined}
+          links={links}
+        >
+          <button
+            class="person_trigger"
+            type="button"
+            aria-label={`About ${name}`}
+            aria-haspopup="dialog"
+            data-modal-open={modalId}
+          />
+        </Card>
+      )}
+      {variant === "default" && photo && (
+        <button
+          class="person_open"
+          type="button"
+          aria-label={`View photo of ${name}`}
+          aria-haspopup="dialog"
+          data-modal-open={modalId}
+        >
+          <Img
+            src={photo}
+            variant="densities"
+            width={96}
+            height={96}
+            class="person_photo"
+          />
+        </button>
+      )}
+      {variant === "default" && (
+        <p class="person_text">
+          <span class="person_name">{name}</span>
+          {jobTitle && <span class="person_role">{jobTitle}</span>}
+        </p>
+      )}
+      <Modal render={hasModal} id={modalId} label={name}>
+        {photo && (
+          <Img
+            src={photo}
+            alt={name}
+            variant="constrained"
+            width={544}
+            height={544}
+            class="person_large"
+          />
+        )}
+        <p class="person_caption">
+          {name}
+          {jobTitle && <span class="person_role">{jobTitle}</span>}
+        </p>
+        <Paragraph render={!!bio} class="person_bio">
+          {bio}
+        </Paragraph>
+      </Modal>
+    </div>
+  )
+}
+
+<style is:global>
+  @layer components {
+    .person_wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+
+      &.card {
+        display: contents;
+      }
+    }
+
+    .person_wrap.card .card_wrap {
+      .person_trigger {
+        position: absolute;
+        inset: 0;
+        padding: 0;
+        background: none;
+        border: 0;
+        border-radius: var(--radius-small);
+        cursor: pointer;
+      }
+
+      .social-links_link {
+        position: relative;
+        z-index: 1;
+      }
+
+      .card_visual > .image {
+        transition: scale var(--hover-duration) var(--hover-ease);
+      }
+
+      &:has(:focus-visible) .card_visual > .image {
+        scale: 1.03 !important;
+      }
+
+      @media (hover: hover) {
+        &:hover .card_visual > .image {
+          scale: 1.03 !important;
+        }
+      }
+    }
+
+    .person_open {
+      flex: none;
+      padding: 0;
+      background: none;
+      border: 0;
+      border-radius: var(--radius-round);
+      cursor: zoom-in;
+      transition: opacity var(--hover-duration) var(--hover-ease);
+      @media (hover: hover) {
+        &:hover {
+          opacity: 0.8;
+        }
+      }
+    }
+
+    .person_photo {
+      display: block;
+      width: 6em;
+      height: 6em;
+      border-radius: inherit;
+    }
+
+    .person_large {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: var(--radius-small);
+    }
+
+    .person_caption {
+      display: flex;
+      flex-direction: column;
+      margin-top: var(--space-4);
+    }
+
+    .person_bio {
+      margin-top: var(--space-3);
+      color: var(--text-2);
+    }
+
+    .person_text {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+
+    .person_role {
+      color: var(--text-2);
+    }
+  }
+</style>

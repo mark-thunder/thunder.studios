@@ -1,0 +1,29 @@
+---
+import { getCollection } from "astro:content";
+import Grid from "@/components/wrapper/Grid.astro";
+import Card from "@/components/item/Card.astro";
+import { LOCATION_ROLES } from "@/consts.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+}
+
+const { render = true } = Astro.props;
+
+const locations = render ? await getCollection("locations") : [];
+---
+
+<Grid render={render && locations.length > 0} medium={2} large={3}>
+  {
+    locations.map(({ data }) => (
+      <Card
+        eyebrow={LOCATION_ROLES[data.role]}
+        heading={`${data.city}, ${data.state}`}
+        headingTag="h3"
+        text={data.intro}
+        href={`/locations/${data.slug}`}
+      />
+    ))
+  }
+</Grid>

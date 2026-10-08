@@ -1,0 +1,102 @@
+---
+import type { HTMLAttributes, SvgComponent } from "astro/types";
+import Icon from "@/components/media/Icon.astro";
+import { socialIcons } from "@/utils/icons.ts";
+import { SOCIALS } from "@/consts.ts";
+
+export interface SocialLink {
+  /** The network's name, read out for anyone who cannot see its mark. */
+  label: string;
+  /** Where the profile lives. */
+  href: string;
+  /** The network's mark. An SVG imported from `src/assets`, rendered inline. */
+  icon: SvgComponent;
+}
+
+interface Props extends HTMLAttributes<"ul"> {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** The profiles, in order. Defaults to the company's own. */
+  links?: SocialLink[];
+  /** Size of the marks. Defaults to `medium`. */
+  variant?: "small" | "medium";
+}
+
+const {
+  render = true,
+  links = SOCIALS.map((social) => ({
+    ...social,
+    icon: socialIcons[social.icon],
+  })),
+  variant = "medium",
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+{
+  render && links.length > 0 && (
+    <ul
+      class:list={["social-links_wrap", variant !== "medium" && variant, className]}
+      {...rest}
+    >
+      {links.map(({ label, href, icon }) => (
+        <li>
+          <a
+            class="social-links_link"
+            href={href}
+            aria-label={label}
+            rel="me noopener"
+            target="_blank"
+          >
+            <Icon src={icon} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style is:global>
+  @layer components {
+    /* Each mark sits in a round hit area no smaller than a fingertip. */
+    .social-links_wrap {
+      --_size: 2.75rem;
+      --_mark: 1.5em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+      margin-inline: calc((var(--_mark) - var(--_size)) / 2);
+
+      &.small {
+        --_size: 2.25rem;
+        --_mark: 1em;
+      }
+    }
+
+    .social-links_link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--_size);
+      min-height: var(--_size);
+      color: var(--text-2);
+      border-radius: var(--radius-round);
+      transition:
+        color var(--hover-duration) var(--hover-ease),
+        background-color var(--hover-duration) var(--hover-ease);
+
+      & > .icon {
+        --_size: var(--_mark);
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--text);
+          background-color: var(--background-2);
+        }
+      }
+    }
+  }
+</style>

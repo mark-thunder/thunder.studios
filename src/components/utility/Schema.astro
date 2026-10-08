@@ -1,0 +1,92 @@
+---
+import { getCollection } from "astro:content";
+import { SITE_DESCRIPTION, SITE_URL, SOCIALS } from "@/consts.ts";
+import { getBusiness } from "@/utils/business.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+  /** A city we film in, such as `Tyler, TX`. Describes the page as video production there, offered by the business, in place of the business itself. */
+  area?: string;
+  /** A blog post. Describes the page as that post, written by its author and published by the business. */
+  article?: {
+    headline: string;
+    image: string;
+    datePublished: Date;
+    dateModified: Date;
+    author?: { name: string } | null;
+  };
+}
+
+const { render = true, area, article } = Astro.props;
+
+const locations =
+  render && !area && !article ? await getCollection("locations") : [];
+const company = await getBusiness();
+
+const business = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": `${SITE_URL}/#business`,
+  name: company.name,
+  legalName: company.legalName,
+  description: SITE_DESCRIPTION,
+  url: SITE_URL,
+  image: new URL("/og-image.jpg", SITE_URL).href,
+  email: company.email,
+  telephone: company.phoneHref.replace("tel:", ""),
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: company.address.street,
+    addressLocality: company.address.city,
+    addressRegion: company.address.state,
+    postalCode: company.address.postalCode,
+    addressCountry: "US",
+  },
+  openingHoursSpecification: company.hours.map(({ days, opens, closes }) => ({
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: days,
+    opens,
+    closes,
+  })),
+  sameAs: SOCIALS.map(({ href }) => href),
+  areaServed: locations.map(({ data }) => ({
+    "@type": "City",
+    name: `${data.city}, ${data.state}`,
+  })),
+};
+
+const service = area && {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  serviceType: "Video production",
+  url: Astro.url.href,
+  provider: { "@id": business["@id"] },
+  areaServed: { "@type": "City", name: area },
+};
+const post = article && {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: article.headline,
+  image: new URL(article.image, SITE_URL).href,
+  datePublished: article.datePublished.toISOString(),
+  dateModified: article.dateModified.toISOString(),
+  author: article.author && {
+    "@type": "Person",
+    name: article.author.name,
+    url: new URL("/about/#team", SITE_URL).href,
+  },
+  publisher: { "@id": business["@id"] },
+  mainEntityOfPage: Astro.url.href,
+};
+---
+
+{
+  render && (
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(post || service || business)}
+    />
+  )
+}
