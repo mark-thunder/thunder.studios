@@ -25,12 +25,12 @@ acceptance criteria. The top item is the next sprint's goal.
 
 ## Backlog
 
-### 1 · Own Sanity project (Phase C)
+### 1 · Studio content
 
-As the owner I want Studios' content in its own Studio so that editing it never touches thunder.media.
+As the owner I want every studio photo and rate in the Studio so that the site shows the real rooms and prices.
 
 - Owner: photos in the Studio (Studio photo, Session photo, each space, Podcast Production) · once rates are set: `plan` documents, then `RatesMain` lists them
-- AC: one Studio publish reaches the site · no Thunder Media content on any page
+- AC: no stand-in photos on any page · one Studio publish reaches the site
 
 ### 2 · Booking
 
