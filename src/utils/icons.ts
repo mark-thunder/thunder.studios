@@ -8,11 +8,6 @@ const byName = (modules: Record<string, { default: SvgComponent }>) =>
     ]),
   );
 
-/** Thunder's marks by file name, so a collection can name one as a string. */
-export const icons: Record<string, SvgComponent> = byName(
-  import.meta.glob("@/assets/icons/thunder/*.svg", { eager: true }),
-);
-
 /** The social networks' marks by file name: facebook, instagram, linkedin, threads, tiktok, x, google. */
 export const socialIcons: Record<string, SvgComponent> = byName(
   import.meta.glob("@/assets/icons/social/*.svg", { eager: true }),

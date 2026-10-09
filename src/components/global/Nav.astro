@@ -5,12 +5,6 @@ import Modal from "@/components/interactive/Modal.astro";
 import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
 import Button from "@/components/Button.astro";
 import SocialLinks from "@/components/item/SocialLinks.astro";
-import Icon from "@/components/media/Icon.astro";
-import type { SvgComponent } from "astro/types";
-import chevron from "@/assets/icons/arrow.svg";
-import film from "@/assets/icons/film.svg";
-import mic from "@/assets/icons/mic.svg";
-import phone from "@/assets/icons/phone.svg";
 import logoWhole from "@/assets/logo/thunder-media.png";
 import logoThunder from "@/assets/logo/thunder-media-thunder.png";
 import logoMedia from "@/assets/logo/thunder-media-media.png";
@@ -18,55 +12,28 @@ import { NAV_LINKS, LEGAL_LINKS } from "@/consts.ts";
 import { getBusiness } from "@/utils/business.ts";
 import { slotContent } from "@/utils/slots.ts";
 
-interface QuickLink {
-  label: string;
-  href: string;
-  icon: SvgComponent;
-}
-
-type Kind =
-  | {
-      /** Menu style. */
-      variant?: "side-panel" | "full-screen";
-      links?: never;
-    }
-  | {
-      variant: "pills";
-      /** Pill links in the bar beside Menu. Defaults to services, studio and phone. */
-      links?: QuickLink[];
-    };
-
-type Props = {
+interface Props {
   /** Set to `false` to omit the component. */
   render?: boolean;
-} & Kind & {
-    /** How the logo comes back with the nav: whole, or one word after the other. */
-    logo?: "whole" | "split";
-    /** Fix the nav over the page. */
-    overlap?: boolean;
-  };
+  /** Menu style. */
+  variant?: "side-panel" | "full-screen";
+  /** How the logo comes back with the nav: whole, or one word after the other. */
+  logo?: "whole" | "split";
+  /** Fix the nav over the page. */
+  overlap?: boolean;
+}
 
 const {
   render = true,
   variant = "side-panel",
-  links,
   logo = "whole",
   overlap = false,
 } = Astro.props;
 const split = logo === "split";
 const fullScreen = variant === "full-screen";
-const pills = variant === "pills";
 const extras = render ? await slotContent(Astro.slots) : "";
 
-const { name, phone: phoneLabel, phoneHref } = await getBusiness();
-const quickLinks = links ?? [
-  { label: "Services", href: "/services", icon: film },
-  { label: "Studio", href: "/locations/white-oak-tx", icon: mic },
-  { label: phoneLabel, href: phoneHref, icon: phone },
-];
-const menuLinks = pills
-  ? NAV_LINKS.filter(({ href }) => href !== "/")
-  : NAV_LINKS;
+const { name } = await getBusiness();
 ---
 
 {
@@ -93,53 +60,22 @@ const menuLinks = pills
             <Img src={logoWhole} transparent loading="eager" />
           )}
         </a>
-        <div class="nav_actions">
-          {pills &&
-            quickLinks.map(({ label, href, icon }) => (
-              <Button
-                class="nav_pill"
-                element="link"
-                href={href}
-                emphasis="secondary"
-              >
-                {label}
-                <Icon src={icon} variant="small" />
-              </Button>
-            ))}
-          <button
-            class="nav_toggle"
-            type="button"
-            aria-label="Menu"
-            aria-haspopup="dialog"
-            data-modal-open="nav-menu"
-          >
-            {pills && <span class="nav_toggle_text">Menu</span>}
-            <span class="nav_toggle_icon" />
-          </button>
-        </div>
+        <button
+          class="nav_toggle"
+          type="button"
+          aria-label="Menu"
+          aria-haspopup="dialog"
+          data-modal-open="nav-menu"
+        >
+          <span class="nav_toggle_icon" />
+        </button>
       </div>
-      <Modal
-        id="nav-menu"
-        class="nav_menu"
-        variant={pills ? "full-screen" : variant}
-        label="Menu"
-      >
-        {pills && (
-          <a class="nav_logo" href="/" aria-label={name} data-modal-close>
-            <Img src={logoWhole} transparent />
-          </a>
-        )}
+      <Modal id="nav-menu" class="nav_menu" variant={variant} label="Menu">
         <nav aria-label="Main">
           <ul class="nav_links">
-            {menuLinks.map(({ label, href }, index) => (
+            {NAV_LINKS.map(({ label, href }, index) => (
               <NavLink
-                class={
-                  pills
-                    ? "text-style-large"
-                    : fullScreen
-                      ? "text-style-h1"
-                      : "text-style-h4"
-                }
+                class={fullScreen ? "text-style-h1" : "text-style-h4"}
                 href={href}
                 data-modal-close
               >
@@ -149,7 +85,6 @@ const menuLinks = pills
                   </span>
                 )}
                 {label}
-                {pills && <Icon src={chevron} variant="small" />}
               </NavLink>
             ))}
           </ul>
@@ -160,27 +95,8 @@ const menuLinks = pills
           </Button>
           <Fragment set:html={extras} />
         </ButtonWrapper>
-        {pills ? (
-          <div class="nav_menu_foot">
-            <ul class="nav_legal" aria-label="Legal">
-              {LEGAL_LINKS.map(({ label, href }) => (
-                <li>
-                  <a
-                    class="nav_legal_link text-style-small"
-                    href={href}
-                    data-modal-close
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <SocialLinks variant="small" />
-          </div>
-        ) : (
-          <SocialLinks class="margin-top-6" render={!fullScreen} />
-        )}
-        {!fullScreen && !pills && (
+        <SocialLinks class="margin-top-6" render={!fullScreen} />
+        {!fullScreen && (
           <ul class="nav_legal" aria-label="Legal">
             {LEGAL_LINKS.map(({ label, href }) => (
               <li>
@@ -437,161 +353,6 @@ const menuLinks = pills
         display: flex;
         align-items: center;
         gap: var(--space-4);
-      }
-    }
-
-    .nav_actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-    }
-
-    /* Pills */
-    .nav_wrap.pills {
-      --nav-height: 2.5rem;
-      padding-block: var(--space-2);
-      border-bottom: 0;
-      transition:
-        box-shadow var(--open-duration) var(--open-ease),
-        translate var(--open-duration) var(--open-ease);
-
-      &[data-state="shown"] {
-        box-shadow: 0 1rem 1rem color-mix(in lab, black 5%, transparent);
-      }
-
-      &.overlap:not([data-state="shown"], [data-state="hidden"]) {
-        background-color: transparent;
-        background-image: linear-gradient(
-          color-mix(in lab, var(--dark-900) 60%, transparent) -26%,
-          transparent
-        );
-        .nav_inner .nav_logo > .image {
-          filter: none;
-        }
-        .nav_toggle {
-          --button-background: var(--brand-600);
-          --button-background-hover: var(--brand-500);
-        }
-        .nav_pill {
-          --button-2-background: color-mix(
-            in lab,
-            var(--light-200) 85%,
-            transparent
-          );
-        }
-      }
-
-      &[data-state="hidden"]:not(:focus-within, :has(dialog[open])) {
-        background-color: var(--background);
-        translate: 0 -100%;
-        .nav_logo {
-          opacity: 1;
-          translate: none;
-        }
-      }
-
-      .nav_logo {
-        width: 9rem;
-      }
-
-      .nav_pill,
-      .nav_toggle_text {
-        display: none;
-      }
-
-      .nav_pill {
-        --button-2-background: color-mix(in lab, var(--text) 6%, transparent);
-        --button-2-border: transparent;
-        min-height: var(--nav-height);
-        padding: 0.5em 1em;
-        .button_text {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5em;
-        }
-      }
-
-      .nav_toggle {
-        --_size: 3rem;
-        gap: var(--space-2);
-        background-color: var(--button-background);
-        color: var(--button-text);
-        transition: background-color var(--hover-duration) var(--hover-ease);
-        @media (hover: hover) {
-          &:hover {
-            opacity: 1;
-            background-color: var(--button-background-hover);
-          }
-        }
-      }
-
-      .nav_toggle_icon {
-        --_bar-gap: 0.75rem;
-        width: 1.25rem;
-        background: linear-gradient(currentcolor, currentcolor) center / 100%
-          var(--border-width) no-repeat;
-      }
-
-      .modal_body {
-        align-content: stretch;
-        grid-template-rows: auto 1fr auto auto;
-        gap: var(--space-6);
-        padding-top: var(--space-5);
-        padding-inline: var(--site-margin);
-        min-height: 100%;
-      }
-
-      .modal_body > .nav_logo {
-        min-height: var(--nav-height);
-      }
-
-      .modal_close {
-        top: var(--space-5);
-        inset-inline-end: var(--site-margin);
-      }
-
-      nav {
-        align-self: center;
-      }
-
-      .nav_links {
-        gap: 0;
-      }
-
-      .nav_link {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-2);
-        color: var(--text);
-      }
-
-      .nav_menu_foot {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-4);
-        padding-top: var(--space-5);
-        border-top: var(--border-width) solid var(--border);
-      }
-
-      .nav_legal {
-        margin-top: 0;
-      }
-
-      @media (width >= 64rem) {
-        padding-block: var(--space-4);
-        .nav_pill {
-          display: inline-flex;
-        }
-        .nav_toggle_text {
-          display: inline;
-        }
-        .nav_toggle {
-          --_size: var(--nav-height);
-          width: auto;
-          padding-inline: 1em 1.125em;
-        }
       }
     }
 

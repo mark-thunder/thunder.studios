@@ -30,15 +30,6 @@ type Props = HTMLAttributes<"div"> & {
    * @min 1
    * @max 12 */
   large?: number;
-  /**
-   * Seconds each slide stays before the next one comes in on its own. Unset,
-   * slides move only when asked. A pause button joins the arrows; it holds
-   * still while hovered, focused or off screen, and starts paused for people
-   * who ask for less motion.
-   *
-   * @min 3
-   */
-  autoplay?: number;
 };
 
 const {
@@ -49,7 +40,6 @@ const {
   small,
   medium,
   large,
-  autoplay,
   class: className,
   ...rest
 } = Astro.props;
@@ -80,7 +70,6 @@ const visible =
     .join("; ") || undefined;
 
 const slides = render ? await slotContent(Astro.slots) : "";
-const heading = render ? await slotContent(Astro.slots, "heading") : "";
 ---
 
 {
@@ -88,64 +77,30 @@ const heading = render ? await slotContent(Astro.slots, "heading") : "";
     <div
       class:list={["slider_wrap", variant !== "bleed" && variant, className]}
       style={visible}
-      data-autoplay={autoplay}
       {...rest}
     >
-      {heading && (
-        <div class="slider_head">
-          <div class="slider_title margin-trim">
-            <Fragment set:html={heading} />
-          </div>
-          <div class="slider_steps">
-            <Button
-              variant="arrow"
-              emphasis="secondary"
-              direction="back"
-              label="Previous slide"
-              data-step="-1"
-            />
-            <Button
-              variant="arrow"
-              emphasis="secondary"
-              label="Next slide"
-              data-step="1"
-            />
-          </div>
-        </div>
-      )}
-
       <div class="slider_list" role="group" aria-label={label} tabindex="0">
         <Fragment set:html={slides} />
       </div>
 
-      {!heading && (
-        <div class="slider_controls">
-          <div class="slider_markers" />
-          <div class="slider_steps">
-            {autoplay && (
-              <Button
-                variant="play"
-                emphasis="secondary"
-                pressed={true}
-                data-slider-toggle
-              />
-            )}
-            <Button
-              variant="arrow"
-              emphasis="secondary"
-              direction="back"
-              label="Previous slide"
-              data-step="-1"
-            />
-            <Button
-              variant="arrow"
-              emphasis="secondary"
-              label="Next slide"
-              data-step="1"
-            />
-          </div>
+      <div class="slider_controls">
+        <div class="slider_markers" />
+        <div class="slider_steps">
+          <Button
+            variant="arrow"
+            emphasis="secondary"
+            direction="back"
+            label="Previous slide"
+            data-step="-1"
+          />
+          <Button
+            variant="arrow"
+            emphasis="secondary"
+            label="Next slide"
+            data-step="1"
+          />
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -156,9 +111,7 @@ const heading = render ? await slotContent(Astro.slots, "heading") : "";
   for (const slider of document.querySelectorAll<HTMLElement>(".slider_wrap")) {
     const list = slider.querySelector<HTMLElement>(".slider_list");
     const markers = slider.querySelector<HTMLElement>(".slider_markers");
-    const controls = slider.querySelector<HTMLElement>(
-      ".slider_head, .slider_controls",
-    );
+    const controls = slider.querySelector<HTMLElement>(".slider_controls");
     const steps = [
       ...slider.querySelectorAll<HTMLButtonElement>("[data-step]"),
     ];
@@ -319,60 +272,6 @@ const heading = render ? await slotContent(Astro.slots, "heading") : "";
       { passive: true },
     );
 
-    const seconds = Number(slider.dataset.autoplay);
-    const toggle = slider.querySelector<HTMLButtonElement>(
-      "[data-slider-toggle]",
-    );
-    if (seconds > 0 && toggle) {
-      let playing = !reduced.matches;
-      let held = false;
-      let seen = false;
-      let timer = 0;
-
-      const advance = () => {
-        const next = current() + 1 < pages() ? current() + 1 : 0;
-        list.scrollTo({ left: next * stride(), behavior: behavior() });
-      };
-
-      const schedule = () => {
-        clearTimeout(timer);
-        if (!playing || held || !seen) return;
-        timer = window.setTimeout(() => {
-          advance();
-          schedule();
-        }, seconds * 1000);
-      };
-
-      const play = (value: boolean) => {
-        playing = value;
-        toggle.setAttribute("aria-pressed", String(value));
-        toggle.setAttribute("aria-label", value ? "Pause" : "Play");
-        list.setAttribute("aria-live", value ? "off" : "polite");
-        schedule();
-      };
-
-      const hold = (value: boolean) => {
-        held = value;
-        schedule();
-      };
-
-      toggle.addEventListener("click", () => play(!playing));
-      slider.addEventListener("pointerenter", () => hold(true));
-      slider.addEventListener("pointerleave", () => hold(false));
-      slider.addEventListener("focusin", () => hold(true));
-      slider.addEventListener("focusout", (event) => {
-        if (!slider.contains(event.relatedTarget as Node | null)) hold(false);
-      });
-      controls?.addEventListener("click", schedule);
-
-      new IntersectionObserver(([entry]) => {
-        seen = entry.isIntersecting;
-        schedule();
-      }).observe(slider);
-
-      play(playing);
-    }
-
     slider.classList.add("is-ready");
 
     const resize = new ResizeObserver(sync);
@@ -419,8 +318,6 @@ const heading = render ? await slotContent(Astro.slots, "heading") : "";
       cursor: grab;
       margin-inline: calc(-1 * var(--_edge));
       padding-inline: var(--_edge);
-      margin-block: calc(-1 * var(--space-3));
-      padding-block: var(--space-3);
       scroll-padding-inline: var(--_edge);
 
       &::-webkit-scrollbar {
@@ -461,36 +358,6 @@ const heading = render ? await slotContent(Astro.slots, "heading") : "";
         margin-inline: 0;
         padding-inline: 0;
         scroll-padding-inline: 0;
-      }
-    }
-
-    .slider_wrap:has(> .slider_head) {
-      gap: var(--space-4);
-    }
-
-    .slider_head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-      padding-bottom: var(--space-4);
-      border-bottom: var(--border-width) solid var(--divider);
-
-      .slider_steps {
-        gap: 0;
-      }
-
-      .button_wrap {
-        --button-2-background: transparent;
-        --button-2-border: transparent;
-        --button-2-background-hover: transparent;
-        --button-2-border-hover: transparent;
-        --button-2-text-hover: var(--text);
-      }
-
-      .slider_wrap:not(.is-ready) & .slider_steps,
-      &.is-empty .slider_steps {
-        display: none;
       }
     }
 

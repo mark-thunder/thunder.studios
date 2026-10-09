@@ -36,21 +36,6 @@ export const STUDIO_SERVICES = [
   "da8fe01c-7463-4cf7-af4e-4d47594e29dd",
   "00ebd617-ec35-4676-87da-0a72e36e63e0",
 ];
-/** What Thunder has in a location, as the Studio stores it and as the page names it. */
-export const LOCATION_ROLES = {
-  headquarters: "Headquarters",
-  studio: "Studio",
-  "service-area": "Service area",
-} as const;
-/** Each network's name, read out for a profile icon. Keys match the Studio's profile networks and `src/assets/icons/social`. */
-export const NETWORK_NAMES = {
-  linkedin: "LinkedIn",
-  instagram: "Instagram",
-  threads: "Threads",
-  facebook: "Facebook",
-  tiktok: "TikTok",
-  x: "X",
-} as const;
 /** The week in order, as the Studio's office hours name the days. */
 export const DAYS = [
   "Monday",
@@ -90,8 +75,6 @@ export const SOCIALS = [
     icon: "google",
   },
 ];
-/** Google Business Profile, where the reviews live. */
-export const GOOGLE_REVIEWS_URL = "https://share.google/T2IZeWaPIvzXy0ca9";
 /** GoHighLevel external tracking id. Loaded on the live site only. */
 export const GHL_TRACKING_ID = "tk_0a9c0103ce8e4509aa18c16afd889db0";
 /** Google Analytics 4 measurement id. Loaded on thunder.media only. */

@@ -6,42 +6,21 @@ import Eyebrow from "@/components/typography/Eyebrow.astro";
 import Button from "@/components/Button.astro";
 import SocialLinks from "@/components/item/SocialLinks.astro";
 import logo from "@/assets/logo/thunder-media.png";
-import Heading from "@/components/typography/Heading.astro";
-import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
-import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
-import {
-  NAV_LINKS,
-  LEGAL_LINKS,
-  SOCIALS,
-} from "@/consts.ts";
+import { NAV_LINKS, LEGAL_LINKS } from "@/consts.ts";
 import { getBusiness } from "@/utils/business.ts";
 import { getStudioServices } from "@/utils/services.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
   render?: boolean;
-  /** Footer layout. `cta` is one closing line and a button over the full height, with the social and legal links along the foot. */
-  variant?: "default" | "split" | "cta";
+  /** Footer layout. */
+  variant?: "default" | "split";
   /** Color theme of element and its children. */
   theme?: "inherit" | "light" | "dark" | "brand";
-  /** The closing line of the `cta` layout. */
-  heading?: string;
-  /** Button label of the `cta` layout. */
-  buttonLabel?: string;
-  /** Button destination of the `cta` layout. */
-  buttonHref?: string;
 }
 
-const {
-  render = true,
-  variant = "default",
-  theme = "inherit",
-  heading,
-  buttonLabel,
-  buttonHref = "/contact",
-} = Astro.props;
+const { render = true, variant = "default", theme = "inherit" } = Astro.props;
 const split = variant === "split";
-const cta = variant === "cta";
 
 const [business, services] = await Promise.all([
   getBusiness(),
@@ -73,151 +52,107 @@ const columns = [
       class:list={[
         "footer_wrap",
         split && "split",
-        cta && "cta",
         theme !== "inherit" && `theme-${theme}`,
       ]}
     >
-      {cta && (
-        <div class="footer_inner">
-          <ContentWrapper centered class="footer_cta">
-            <Heading tag="h2" variant="display" maxWidth={12}>
-              <Fragment set:html={heading} />
-            </Heading>
-            <ButtonWrapper render={!!buttonLabel}>
-              <Button element="link" href={buttonHref}>
-                {buttonLabel}
-              </Button>
-            </ButtonWrapper>
-          </ContentWrapper>
-          <div class="footer_foot">
-            <ul class="footer_social" aria-label="Social">
-              {SOCIALS.map(({ label, href }) => (
-                <li>
-                  <a class="footer_link" href={href}>
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <ul class="footer_social" aria-label="Legal">
-              {LEGAL_LINKS.map(({ label, href }) => (
-                <li>
-                  <a class="footer_link" href={href}>
-                    {label}
-                  </a>
-                </li>
-              ))}
-              <li>
-                &copy;{new Date().getFullYear()}&#160;{business.name}
-              </li>
-            </ul>
-          </div>
-        </div>
-      )}
-      {!cta && (
-        <div class="footer_inner">
-          {split && (
-            <div class="footer_split">
-              <div class="footer_side">
-                <Eyebrow variant="tag">Links</Eyebrow>
-                <Grid medium={2} animate={false}>
-                  {columns.map(({ id, label, links }) => (
-                    <nav class="footer_group" aria-labelledby={id}>
-                      <Paragraph id={id} variant="large" class="footer_label">
-                        {label}
-                      </Paragraph>
-                      <ul class="footer_links">
-                        {links.map(({ label, href }) => (
-                          <li>
-                            <a class="footer_link" href={href}>
-                              {label}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
-                  ))}
-                </Grid>
-              </div>
-              <div class="footer_side">
-                <Eyebrow variant="tag">Stay in touch</Eyebrow>
-                <address class="footer_address">
-                  <Button
-                    element="link"
-                    variant="link"
-                    href={business.phoneHref}
-                  >
-                    {business.phone}
-                  </Button>
-                  <Button
-                    element="link"
-                    variant="link"
-                    href={`mailto:${business.email}`}
-                  >
-                    {business.email}
-                  </Button>
-                  <span class="footer_note">{business.addressLine}</span>
-                  {business.hoursLine && (
-                    <span class="footer_note">{business.hoursLine}</span>
-                  )}
-                </address>
-                <SocialLinks variant="small" />
-              </div>
+      <div class="footer_inner">
+        {split && (
+          <div class="footer_split">
+            <div class="footer_side">
+              <Eyebrow variant="tag">Links</Eyebrow>
+              <Grid medium={2} animate={false}>
+                {columns.map(({ id, label, links }) => (
+                  <nav class="footer_group" aria-labelledby={id}>
+                    <Paragraph id={id} variant="large" class="footer_label">
+                      {label}
+                    </Paragraph>
+                    <ul class="footer_links">
+                      {links.map(({ label, href }) => (
+                        <li>
+                          <a class="footer_link" href={href}>
+                            {label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                ))}
+              </Grid>
             </div>
-          )}
-          <Grid medium={2} large={4} animate={false} render={!split}>
-            <div class="footer_group">
-              <a class="footer_logo" href="/" aria-label={business.name}>
-                <Img src={logo} transparent />
-              </a>
+            <div class="footer_side">
+              <Eyebrow variant="tag">Stay in touch</Eyebrow>
               <address class="footer_address">
-                <span>{business.addressLine}</span>
-                {business.hoursLine && <span>{business.hoursLine}</span>}
-                <a class="footer_link" href={business.phoneHref}>
+                <Button element="link" variant="link" href={business.phoneHref}>
                   {business.phone}
-                </a>
-                <a class="footer_link" href={`mailto:${business.email}`}>
+                </Button>
+                <Button
+                  element="link"
+                  variant="link"
+                  href={`mailto:${business.email}`}
+                >
                   {business.email}
-                </a>
+                </Button>
+                <span class="footer_note">{business.addressLine}</span>
+                {business.hoursLine && (
+                  <span class="footer_note">{business.hoursLine}</span>
+                )}
               </address>
+              <SocialLinks variant="small" />
             </div>
-            {columns.map(({ id, label, links }) => (
-              <nav class="footer_group" aria-labelledby={id}>
-                <Paragraph id={id} variant="small" class="footer_label">
-                  {label}
-                </Paragraph>
-                <ul class="footer_links">
-                  {links.map(({ label, href }) => (
-                    <li>
-                      <a class="footer_link" href={href}>
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
-          </Grid>
-          <div class="footer_bottom">
-            <div class="footer_legal">
-              <p class="footer_copyright text-style-small">
-                &copy; <span id="year">{new Date().getFullYear()}</span>&#160;
-                {business.legalName}
-              </p>
-              <ul class="footer_legal_list">
-                {LEGAL_LINKS.map(({ label, href }) => (
+          </div>
+        )}
+        <Grid medium={2} large={4} animate={false} render={!split}>
+          <div class="footer_group">
+            <a class="footer_logo" href="/" aria-label={business.name}>
+              <Img src={logo} transparent />
+            </a>
+            <address class="footer_address">
+              <span>{business.addressLine}</span>
+              {business.hoursLine && <span>{business.hoursLine}</span>}
+              <a class="footer_link" href={business.phoneHref}>
+                {business.phone}
+              </a>
+              <a class="footer_link" href={`mailto:${business.email}`}>
+                {business.email}
+              </a>
+            </address>
+          </div>
+          {columns.map(({ id, label, links }) => (
+            <nav class="footer_group" aria-labelledby={id}>
+              <Paragraph id={id} variant="small" class="footer_label">
+                {label}
+              </Paragraph>
+              <ul class="footer_links">
+                {links.map(({ label, href }) => (
                   <li>
-                    <a class="footer_link text-style-small" href={href}>
+                    <a class="footer_link" href={href}>
                       {label}
                     </a>
                   </li>
                 ))}
               </ul>
-            </div>
-            <SocialLinks variant="small" render={!split} />
+            </nav>
+          ))}
+        </Grid>
+        <div class="footer_bottom">
+          <div class="footer_legal">
+            <p class="footer_copyright text-style-small">
+              &copy; <span id="year">{new Date().getFullYear()}</span>&#160;
+              {business.legalName}
+            </p>
+            <ul class="footer_legal_list">
+              {LEGAL_LINKS.map(({ label, href }) => (
+                <li>
+                  <a class="footer_link text-style-small" href={href}>
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
+          <SocialLinks variant="small" render={!split} />
         </div>
-      )}
+      </div>
     </footer>
   )
 }
@@ -343,43 +278,6 @@ const columns = [
 
     .footer_copyright {
       color: var(--text-2);
-    }
-
-    .footer_wrap.cta {
-      min-height: 100svh;
-      padding: var(--site-margin) var(--site-margin)
-        max(var(--site-margin), 6rem);
-      border-top: 0;
-
-      .footer_inner {
-        gap: var(--section-space-medium);
-      }
-      .footer_link {
-        color: var(--text);
-      }
-    }
-
-    /* The line fills the space above the foot and centres in it. */
-    .footer_cta {
-      flex-grow: 1;
-      justify-content: center;
-    }
-
-    .footer_foot {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-      @media (width >= 64rem) {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: baseline;
-      }
-    }
-
-    .footer_social {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2) var(--space-4);
     }
 
     .footer_split {

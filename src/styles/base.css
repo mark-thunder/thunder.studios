@@ -49,12 +49,7 @@
   --radius-main: 0.5rem;
   --radius-round: 100vw;
   --button-radius: 0.5em;
-  --breakout-visual-order: 0;
-  --breakout-visual-ratio: 3 / 2;
-  --breakout-visual-ratio-large: 3 / 2;
-  --breakout-visual-max-height: none;
   --button-wrapper-margin-top: var(--space-8);
-  --divider: var(--border);
   --button-font-size: 1em;
   --button-font-weight: var(--primary-regular);
   --visual-radius: var(--radius-small);
@@ -764,8 +759,6 @@ h6,
 
   --field-background: transparent;
   --field-border: var(--border);
-
-  --logo-filter: brightness(0);
 }
 
 /* Dark theme */
@@ -797,6 +790,4 @@ h6,
 
   --field-background: transparent;
   --field-border: var(--border);
-
-  --logo-filter: brightness(0) invert(1);
 }

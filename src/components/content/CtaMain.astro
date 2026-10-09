@@ -1,211 +1,23 @@
 ---
 import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
-import Eyebrow from "@/components/typography/Eyebrow.astro";
 import Heading from "@/components/typography/Heading.astro";
-import Paragraph from "@/components/typography/Paragraph.astro";
 import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
 import Button from "@/components/Button.astro";
-import Img from "@/components/media/Img.astro";
-import { slotContent } from "@/utils/slots.ts";
 
-type ImageSource = ImageMetadata | string;
-
-type Base = {
+interface Props {
   /** Set to `false` to omit the component. */
   render?: boolean;
-};
+}
 
-type Props = Base &
-  (
-    | {
-        /** Content layout. */
-        variant?: "split";
-        /** An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
-        image: ImageSource;
-        /** Leave unset on decorative images — renders `alt=""`. */
-        imageAlt?: string;
-        /** Show the image first. */
-        reverse?: boolean;
-        asideImage?: never;
-        asideImageAlt?: never;
-      }
-    | {
-        variant: "card";
-        image?: never;
-        imageAlt?: never;
-        reverse?: never;
-        asideImage?: never;
-        asideImageAlt?: never;
-      }
-    | {
-        /** `mosaic` runs edge to edge: a tall picture, and beside it a second picture over the call in a brand-colour panel. */
-        variant: "mosaic";
-        /** An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
-        image: ImageSource;
-        /** Leave unset on decorative images — renders `alt=""`. */
-        imageAlt?: string;
-        /** The smaller picture above the call. An imported asset, a remote `http(s)` URL, or a path to a file in `public/`. */
-        asideImage: ImageSource;
-        /** Leave unset on decorative images — renders `alt=""`. */
-        asideImageAlt?: string;
-        reverse?: never;
-      }
-  );
-
-type AllProps = Base & {
-  variant?: "split" | "card" | "mosaic";
-  image?: ImageSource;
-  imageAlt?: string;
-  reverse?: boolean;
-  asideImage?: ImageSource;
-  asideImageAlt?: string;
-};
-
-const {
-  render = true,
-  variant = "split",
-  image,
-  imageAlt,
-  reverse = false,
-  asideImage,
-  asideImageAlt,
-} = Astro.props as AllProps;
-
-const buttons = render ? await slotContent(Astro.slots) : "";
-const card = variant === "card";
-const mosaic = variant === "mosaic";
+const { render = true } = Astro.props;
 ---
 
-{
-  render && mosaic && (
-    <div class="cta-main_wrap mosaic">
-      <div class="cta-main_tall">
-        <Img src={image!} alt={imageAlt} animate />
-      </div>
-      <div class="cta-main_aside">
-        <Img src={asideImage!} alt={asideImageAlt} animate />
-      </div>
-      <div class="cta-main_panel theme-brand">
-        <ContentWrapper>
-          <Heading tag="h2" class="heading-accent" maxWidth={16}>
-            Your next project starts with a <strong>20-minute</strong>{" "}
-            <em>call.</em>
-          </Heading>
-          <Paragraph variant="large" maxWidth={40}>
-            Our crew lives and works in Longview, so planning a shoot takes a
-            phone call, not a travel budget.
-          </Paragraph>
-          <ButtonWrapper>
-            <Button element="link" href="/contact">
-              Book a Discovery Call
-            </Button>
-            <Fragment set:html={buttons} />
-          </ButtonWrapper>
-        </ContentWrapper>
-      </div>
-    </div>
-  )
-}
-
-{
-  render && card && (
-    <ContentWrapper variant="card">
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        Your next project starts with a <strong>20-minute</strong>{" "}
-        <em>call.</em>
-      </Heading>
-      <ButtonWrapper>
-        <Button element="link" href="/contact">
-          Book a Discovery Call
-        </Button>
-        <Fragment set:html={buttons} />
-      </ButtonWrapper>
-    </ContentWrapper>
-  )
-}
-<ContentWrapper
-  render={render && !card && !mosaic && !!image}
-  variant="breakout"
-  reverse={reverse}
-  column2Class="ratio-5-4"
->
-  <Eyebrow>Ready to Start?</Eyebrow>
+<ContentWrapper render={render} variant="card">
   <Heading tag="h2" class="heading-accent" maxWidth={14}>
     Your next project starts with a <strong>20-minute</strong>{" "}
     <em>call.</em>
   </Heading>
   <ButtonWrapper>
     <Button element="link" href="/contact">Book a Discovery Call</Button>
-    <Fragment set:html={buttons} />
   </ButtonWrapper>
-  <Img
-    slot="column2"
-    src={image!}
-    alt={imageAlt}
-    width={1440}
-    height={1152}
-    animate
-  />
 </ContentWrapper>
-
-<style is:global>
-  @layer components {
-    .cta-main_wrap.mosaic {
-      display: grid;
-      width: 100vw;
-      align-self: center;
-      grid-template-columns: minmax(0, 1fr);
-
-      .cta-main_tall {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        max-height: 30rem;
-      }
-
-      .cta-main_aside {
-        display: none;
-      }
-
-      @media (width >= 64rem) {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        .cta-main_tall {
-          grid-row: span 2;
-          aspect-ratio: auto;
-          max-height: none;
-        }
-        .cta-main_aside {
-          display: block;
-          aspect-ratio: 6 / 1;
-        }
-        .cta-main_panel {
-          display: grid;
-          align-content: center;
-          padding: var(--section-space-large);
-        }
-      }
-    }
-
-    .cta-main_tall,
-    .cta-main_aside {
-      position: relative;
-      min-height: 0;
-      overflow: clip;
-      > .image {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-      }
-    }
-
-    .cta-main_aside {
-      aspect-ratio: 16 / 9;
-    }
-
-    .cta-main_panel {
-      padding: var(--section-space-medium) var(--site-margin);
-      background-color: var(--background);
-      color: var(--text);
-    }
-  }
-</style>

@@ -1,5 +1,0 @@
-<svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M14 8h8l4 10-5 3a22 22 0 0010 10l3-5 10 4v8a2 2 0 01-2 2C18 40 8 22 8 10a2 2 0 012-2h4z" stroke="currentColor" stroke-width="2" fill="none">
-<animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="2.5s" repeatCount="indefinite"/>
-</path>
-</svg>
