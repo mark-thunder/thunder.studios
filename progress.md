@@ -46,8 +46,10 @@ Home, Services, one page per service with a page address
 | Lists read through `getOrdered()` (`utils/ordered.ts`), sorted by the Studio's `order` | Trusting `getCollection()` order | Astro docs: collection order is non-deterministic; sort yourself |
 | A service has a page when it has a page address (`slug`) | A list of service ids in the code | The editor decides in the Studio; one source (PoSD) |
 | `@sanity/client` in a content loader, GROQ projecting only the fields the site uses, Zod schemas in `content.config.ts` | `@sanity/astro` + TypeGen | Build-time reads keep `getCollection()` and schema checks with no React; Sanity GROQ rules: always project |
+| One action everywhere, "Request a Session" (contact form), and a closing card "Book a studio session." | "Book a Discovery Call" and "Your next project starts with a 20-minute call" | Owner 10-09: match rental studios; studios without instant booking take a session request and confirm in writing (Studio Terms) |
 | One `LAUNCHED` switch for noindex, sitemap and the robots Sitemap line | Per-page noindex | One decision in one place (PoSD) |
 | Page copy only from lines Thunder Media's Sanity already publishes; open facts (rates, hours) say "coming soon" | Writing rates and hours | Owner 10-08: accurate copy, updated later |
+| Four policies in `src/content/legal`: Privacy, Terms of Use and Cookies describe only what this site runs (no analytics or chat; one `theme` storage key); Studio Terms covers sessions, with prices, cancellation windows and overtime left to each booking confirmation | Copying thunder.media's policies; numbers taken from other studios | Owner 10-09; studio terms follow the common outline of published studio terms (booking, cancellation, use, damage, safety, content ownership, law); Texas one-party recording consent per Texas State Law Library |
 
 ## Components
 
@@ -85,10 +87,10 @@ alt on every image (`shared/image-with-alt.ts`).
 
 ## Debts
 
-- Build var `PUBLIC_TURNSTILE_SITE_KEY` is thunder.media's key.
+- Build var `PUBLIC_TURNSTILE_SITE_KEY` is thunder.media's key, whose widget does not list Studios' hostnames, so the contact form cannot pass the check yet. Studios needs its own Turnstile widget, and the Worker its secrets (`TURNSTILE_SECRET_KEY`, `JEV_API_KEY`, `GHL_WEBHOOK_URL`).
 - Contact form options (services, budgets) are film-production choices that feed GHL; they change with booking.
 - `LocalBusiness` `@id` and canonical URLs use `SITE_URL` (thunder.media) and `sameAs` lists Thunder Media's profiles until Studios has a domain and profiles.
-- The policies (`src/content/legal`) name Thunder Media and thunder.media; owner (or attorney) rewrites them before launch.
+- Policies published without attorney review (as for thunder.media); `studio-terms` stays a draft until the owner settles its choices (backlog checklist).
 - `RichText` portable text and `SanityMedia` have nothing to render: the Studio has no rich-text field yet.
 - `workers_dev` and `preview_urls` not set explicitly in `wrangler.jsonc`.
 - `base.css` and a few components are not Prettier-clean (carried over).

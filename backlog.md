@@ -20,6 +20,8 @@ acceptance criteria. The top item is the next sprint's goal.
 - [ ] Rates: hourly, membership (price and what each includes)
 - [ ] Studio hours, or "open around the clock"
 - [ ] Domain for the site
+- [ ] Studio Terms choices, then mark it final: cancellation and rescheduling windows; overtime rate; deposit or card on file; under-18 rule; food and drink; who owns delivered files and when; refund when we stop a session that breaks the terms. A Texas attorney reads it and the guest release
+- [ ] Guest release (recording and likeness) to send with each booking
 
 ## Backlog
 

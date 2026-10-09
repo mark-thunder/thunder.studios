@@ -1,37 +1,27 @@
 ---
 title: Terms of Use
-description: The terms for using thunder.media, including quotes and proposals, payments and refunds, ownership of the work shown, and reviews.
-updated: 2026-09-28
+description: The terms for using the Thunder Studios website, including prices and bookings, ownership of what the site shows, and links to other services.
+updated: 2026-10-09
 status: final
 ---
 
-These terms apply when you use thunder.media. By using the site, you agree to them. If you do not agree, please do not use the site.
+These terms apply when you use the Thunder Studios website. By using the site, you agree to them. If you do not agree, please do not use the site.
 
 ## What this site is
 
-The site describes Thunder Media's video, photo, podcast and marketing services and lets you contact us. You cannot buy anything on the site today.
+The site describes the Thunder Studios rooms in White Oak, Texas, and the services we run in them, and lets you contact us. You cannot book or pay on the site today.
 
-## Quotes, proposals and contracts
+## Prices and bookings
 
-Nothing on this site is an offer at a fixed price. Every project is priced for its scope after we talk. The price, what we deliver, the schedule and the payment terms are set out in a written proposal or contract for that project. If anything on this site differs from your proposal or contract, the proposal or contract controls.
+Nothing on this site is an offer at a fixed price. Your booking confirmation or contract sets the price, the time booked, what we provide, and the payment and cancellation terms. Our [Studio Terms](/studio-terms) apply to every session. If anything on this site differs from your booking confirmation or contract, the confirmation or contract controls.
 
-## Payments, cancellations and refunds
+## Ownership of what the site shows
 
-Deposits, payment dates, cancellations, rescheduling and refunds are set out in each project's proposal or contract, and that document governs. This site takes no payments.
+The photos, video, text and design on this site belong to Thunder Studios or to the people who licensed them to us. You may view and share links to the site. You may not copy, download, edit or reuse its content without our written permission.
 
-## Ownership of the work shown
+## Links
 
-The photos, video, text and design on this site belong to Thunder Media or to the people who licensed them to us. You may view and share links to the site. You may not copy, download, edit or reuse its content without our written permission.
-
-Client names and logos belong to their owners. We show them to name the organizations we have worked with; showing them does not mean those organizations endorse this site.
-
-## Reviews and results
-
-Reviews on this site are from real clients and describe their own experience. Results depend on each project, and your results may differ.
-
-## Links and embedded videos
-
-The site links to other services, such as Google, Instagram, Facebook, LinkedIn and Threads, and some pages play videos from YouTube. We do not control them, and their own terms and privacy policies apply when you use them.
+The site links to other services, such as Google, Instagram, Facebook and LinkedIn. We do not control them, and their own terms and privacy policies apply when you use them.
 
 ## Using the site responsibly
 
@@ -43,7 +33,7 @@ We keep the site accurate and working, but we provide it "as is". We do not prom
 
 ## Limit on liability
 
-To the extent the law allows, Thunder Media is not liable for indirect or consequential losses that come from using this site. Nothing in these terms limits a liability that the law does not allow us to limit.
+To the extent the law allows, Thunder Studios is not liable for indirect or consequential losses that come from using this site. Nothing in these terms limits a liability that the law does not allow us to limit.
 
 ## Law
 

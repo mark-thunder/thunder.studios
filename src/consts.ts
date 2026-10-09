@@ -36,6 +36,7 @@ export const LEGAL_LINKS = [
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
   { label: "Cookies", href: "/cookies" },
+  { label: "Studio Terms", href: "/studio-terms" },
 ];
 /** Thunder Media's profiles, in the order they are listed. `icon` names a file in `src/assets/icons/social`. */
 export const SOCIALS = [
