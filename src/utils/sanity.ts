@@ -12,16 +12,19 @@ const client = createClient({
 /** GROQ for an image with its alt text, resolved to the CDN URL and size `Img` needs, plus the editor's crop and hotspot. */
 const image = `{ _type, alt, asset, crop, hotspot, "url": asset->url, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height }`;
 
-/** GROQ for a location: the city and state the business serves. */
-export const locationFields = `city, state`;
-
-/** GROQ for Site settings: everything, with each fixed-place photo resolved as an image or left empty. */
+/** GROQ for Site settings: the business details, with each fixed-place photo resolved as an image or left empty. */
 const photo = (name: string) =>
   `"${name}": select(defined(${name}.asset) => ${name} ${image})`;
-export const settingsFields = `..., ${photo("heroPhoto")}, ${photo("onSetPhoto")}, ${photo("servicesPhoto")}`;
+export const settingsFields = `name, legalName, address, phone, email, hours, ${photo("studioPhoto")}, ${photo("sessionPhoto")}`;
 
-/** A service's heading keeps its bold and italic marks; `title` is the same words as plain text. Its card photo counts only once a file is uploaded. */
-export const serviceFields = `..., "heading": title, "title": pt::text(title), "image": select(defined(image.asset) => image ${image})`;
+/** A service's heading keeps its bold and italic marks; `title` is the same words as plain text. Its photo counts only once a file is uploaded. */
+export const serviceFields = `"heading": title, "title": pt::text(title), text, "slug": slug.current, "image": select(defined(image.asset) => image ${image}), order`;
+
+/** A studio space like a service, with the page address and name of the service booked in it. */
+export const spaceFields = `"heading": title, "title": pt::text(title), text, "photo": select(defined(photo.asset) => photo ${image}), "service": service->{ "slug": slug.current, "title": pt::text(title) }, order`;
+
+/** A team member, with the portrait resolved once one is uploaded. */
+export const teamFields = `name, role, "photo": select(defined(photo.asset) => photo ${image}), order`;
 
 const builder = createImageUrlBuilder({
   projectId: SANITY.projectId,
@@ -55,12 +58,12 @@ const frame = (image: Framed | null | undefined) => {
   }
 };
 
-/** A content collection loader for one Sanity document type, read at build in the Studio's `order`, newest first where there is none. `fields` is a GROQ projection body; the collection's schema validates each entry and drops what it does not name. */
-export const sanityLoader = (type: string, fields = "..."): Loader => ({
+/** A content collection loader for one Sanity document type, read at build in the Studio's `order`. `fields` is a GROQ projection body naming only what the site uses; the collection's schema validates each entry. */
+export const sanityLoader = (type: string, fields: string): Loader => ({
   name: `sanity-${type}`,
   load: async ({ store, parseData }) => {
     const docs = await client.fetch<Record<string, unknown>[]>(
-      `*[_type == $type] | order(order asc, publishedAt desc){ _id, _rev, ${fields} }`,
+      `*[_type == $type] | order(order asc){ _id, _rev, ${fields} }`,
       { type },
     );
     store.clear();

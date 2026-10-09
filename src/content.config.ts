@@ -4,13 +4,11 @@ import { z } from "astro/zod";
 import {
   sanityLoader,
   serviceFields,
+  spaceFields,
+  teamFields,
   settingsFields,
-  locationFields,
 } from "@/utils/sanity.ts";
-import { WORK_KINDS, DAYS } from "@/consts.ts";
-
-/** A Studio Type of work: one of the three video services. */
-const kind = z.enum(WORK_KINDS.map(({ kind }) => kind));
+import { DAYS } from "@/consts.ts";
 
 /** A Sanity image, resolved by the GROQ in `utils/sanity.ts` to what `Img` needs. */
 const sanityImage = z.object({
@@ -31,22 +29,42 @@ const heading = z.array(
   }),
 );
 
+/** The Studio's `order`: lower shows first. `getCollection()` returns entries in no set order, so readers sort by it. */
+const order = z.number().int();
+
 const services = defineCollection({
   loader: sanityLoader("service", serviceFields),
   schema: z.object({
     title: z.string(),
     heading,
     text: z.string(),
-    kind: kind.nullish(),
+    slug: z.string().nullish(),
     image: sanityImage.nullish(),
+    order,
   }),
 });
 
-const locations = defineCollection({
-  loader: sanityLoader("location", locationFields),
+const spaces = defineCollection({
+  loader: sanityLoader("space", spaceFields),
   schema: z.object({
-    city: z.string(),
-    state: z.string(),
+    title: z.string(),
+    heading,
+    text: z.string(),
+    photo: sanityImage.nullish(),
+    service: z
+      .object({ slug: z.string().nullish(), title: z.string() })
+      .nullish(),
+    order,
+  }),
+});
+
+const team = defineCollection({
+  loader: sanityLoader("teamMember", teamFields),
+  schema: z.object({
+    name: z.string(),
+    role: z.string(),
+    photo: sanityImage.nullish(),
+    order,
   }),
 });
 
@@ -73,9 +91,8 @@ const settings = defineCollection({
         }),
       )
       .nullish(),
-    heroPhoto: sanityImage.nullish(),
-    onSetPhoto: sanityImage.nullish(),
-    servicesPhoto: sanityImage.nullish(),
+    studioPhoto: sanityImage.nullish(),
+    sessionPhoto: sanityImage.nullish(),
   }),
 });
 
@@ -91,7 +108,8 @@ const legal = defineCollection({
 
 export const collections = {
   services,
-  legal,
-  locations,
+  spaces,
+  team,
   settings,
+  legal,
 };

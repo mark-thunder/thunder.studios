@@ -1,5 +1,4 @@
 ---
-import { getCollection } from "astro:content";
 import { SITE_DESCRIPTION, SITE_URL, SOCIALS } from "@/consts.ts";
 import { getBusiness } from "@/utils/business.ts";
 
@@ -10,7 +9,6 @@ interface Props {
 
 const { render = true } = Astro.props;
 
-const locations = render ? await getCollection("locations") : [];
 const company = await getBusiness();
 
 const business = {
@@ -39,10 +37,6 @@ const business = {
     closes,
   })),
   sameAs: SOCIALS.map(({ href }) => href),
-  areaServed: locations.map(({ data }) => ({
-    "@type": "City",
-    name: `${data.city}, ${data.state}`,
-  })),
 };
 ---
 

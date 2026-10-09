@@ -1,6 +1,5 @@
 import { getCollection } from "astro:content";
-import studio from "@/assets/images/hero-thunder.jpg";
-import onSet from "@/assets/images/why-thunder.jpg";
+import crew from "@/assets/images/why-thunder.jpg";
 import paint from "@/assets/stand-ins/work-skywardtech.jpg";
 
 /** The photos shown in fixed places, from the Studio's Site settings (Photos). Each falls back to the photo built into the site until one is uploaded. */
@@ -18,11 +17,10 @@ export const getPhotos = async () => {
   });
   return {
     studio: pick(
-      settings?.heroPhoto,
-      studio,
-      "Thunder Media filming an interview in the studio",
+      settings?.studioPhoto,
+      crew,
+      "Two crew members setting up a camera under studio lights",
     ),
-    onSet: pick(settings?.onSetPhoto, onSet, "Thunder Media on set"),
-    services: pick(settings?.servicesPhoto, paint, ""),
+    session: pick(settings?.sessionPhoto, paint, ""),
   };
 };

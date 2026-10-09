@@ -8,7 +8,7 @@ import SocialLinks from "@/components/item/SocialLinks.astro";
 import logo from "@/assets/logo/thunder-media.png";
 import { NAV_LINKS, LEGAL_LINKS } from "@/consts.ts";
 import { getBusiness } from "@/utils/business.ts";
-import { getStudioServices } from "@/utils/services.ts";
+import { getOrdered } from "@/utils/ordered.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
@@ -24,7 +24,7 @@ const split = variant === "split";
 
 const [business, services] = await Promise.all([
   getBusiness(),
-  render ? getStudioServices() : [],
+  render ? getOrdered("services") : [],
 ]);
 /* Each column is a heading and its links: the services, then the rest of the site. */
 const columns = [
@@ -32,8 +32,8 @@ const columns = [
     id: "footer-services",
     label: "Services",
     links: [
-      ...services.flatMap(({ label, slug }) =>
-        label && slug ? [{ label, href: `/services/${slug}` }] : [],
+      ...services.flatMap(({ title, slug }) =>
+        slug ? [{ label: title, href: `/services/${slug}` }] : [],
       ),
       { label: "All Services", href: "/services" },
     ],

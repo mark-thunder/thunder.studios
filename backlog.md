@@ -19,7 +19,6 @@ acceptance criteria. The top item is the next sprint's goal.
 
 - [ ] Rates: hourly, membership (price and what each includes)
 - [ ] Studio hours, or "open around the clock"
-- [ ] Photos of each room (video podcast, audio podcast, photography) and portraits of Richie and Isaac
 - [ ] Domain for the site
 
 ## Backlog
@@ -28,9 +27,7 @@ acceptance criteria. The top item is the next sprint's goal.
 
 As the owner I want Studios' content in its own Studio so that editing it never touches thunder.media.
 
-- Content: owner reviews and publishes the drafts (2 `service`, 3 `space`, 2 `teamMember`, `settings`) · `settings` (draft, complete) · `plan` once rates are set
-- Site: `SANITY` in `consts.ts` → the new project · collections for `space`, `service`, `plan`, `teamMember` · home bands and rates from Sanity · `STUDIO_SERVICES` and `WORK_KINDS` removed
-- Deploy hook on `thunder-studios` + Sanity webhook on publish (drafts off)
+- Owner: photos in the Studio (Studio photo, Session photo, each space, Podcast Production) · once rates are set: `plan` documents, then `RatesMain` lists them
 - AC: one Studio publish reaches the site · no Thunder Media content on any page
 
 ### 2 · Booking

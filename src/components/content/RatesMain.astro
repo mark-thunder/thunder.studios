@@ -1,0 +1,40 @@
+---
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import { getOrdered } from "@/utils/ordered.ts";
+import { getBusiness } from "@/utils/business.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+}
+
+const { render = true } = Astro.props;
+
+const [team, { addressLine }] = await Promise.all([
+  getOrdered("team"),
+  getBusiness(),
+]);
+const people = team.map(({ name, role }) => `${name}, ${role.toLowerCase()}`);
+const crew =
+  people.length > 1
+    ? `${people.slice(0, -1).join(", ")}, and ${people.at(-1)}`
+    : people.join("");
+---
+
+<ContentWrapper render={render}>
+  <Eyebrow>Rates</Eyebrow>
+  <Heading tag="h2" class="heading-accent" maxWidth={14}>
+    By the hour <em>or as a member.</em>
+  </Heading>
+  <Paragraph maxWidth={40}>
+    Book a single session or a regular recording slot. Rates and studio hours
+    are coming soon. Until then, book a discovery call and we'll find the option
+    that fits how often you record.
+  </Paragraph>
+  <Paragraph variant="small" maxWidth={40}>
+    {`${addressLine}. You'll work with ${crew}.`}
+  </Paragraph>
+</ContentWrapper>

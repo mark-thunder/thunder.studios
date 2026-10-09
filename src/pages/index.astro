@@ -4,14 +4,12 @@ import Section from "@/components/wrapper/Section.astro";
 import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
 import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
 import Button from "@/components/Button.astro";
-import Eyebrow from "@/components/typography/Eyebrow.astro";
 import Heading from "@/components/typography/Heading.astro";
 import Paragraph from "@/components/typography/Paragraph.astro";
-import Img from "@/components/media/Img.astro";
 import Blob from "@/components/media/Blob.astro";
 import Overlay from "@/components/media/Overlay.astro";
-import audioStandIn from "@/assets/stand-ins/work-vortextech.jpg";
-import photoStandIn from "@/assets/stand-ins/work-quantumflow.jpg";
+import SpacesMain from "@/components/content/SpacesMain.astro";
+import RatesMain from "@/components/content/RatesMain.astro";
 import { getPhotos } from "@/utils/photos.ts";
 
 const photos = await getPhotos();
@@ -37,119 +35,21 @@ const photos = await getPhotos();
       </ButtonWrapper>
       <Blob
         slot="column2"
-        src={photos.onSet.src}
-        alt={photos.onSet.alt}
-        focus={photos.onSet.focus ?? "62% 40%"}
+        src={photos.studio.src}
+        alt={photos.studio.alt}
+        focus={photos.studio.focus ?? "62% 40%"}
         loading="eager"
       />
     </ContentWrapper>
   </Section>
 
-  <!-- Video podcast studio -->
-  <Section id="studios" paddingTop="large">
-    <ContentWrapper variant="columns" column2Class="ratio-5-4">
-      <Eyebrow>Studio 01</Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        Video <em>podcast studio</em>
-      </Heading>
-      <Paragraph maxWidth={36}>
-        Sit down and talk. We run the cameras and microphones, then edit the
-        episode and the clips for every platform.
-      </Paragraph>
-      <ButtonWrapper>
-        <Button
-          element="link"
-          href="/services/podcast-production"
-          emphasis="secondary"
-        >
-          Podcast Production
-        </Button>
-      </ButtonWrapper>
-      <Img
-        slot="column2"
-        src={photos.studio.src}
-        alt={photos.studio.alt}
-        width={1440}
-        height={1152}
-        animate
-      />
-    </ContentWrapper>
-  </Section>
-
-  <!-- Audio podcast studio -->
-  <Section paddingTop="none">
-    <ContentWrapper variant="columns" column2Class="ratio-5-4" reverse>
-      <Eyebrow>Studio 02</Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        Audio <em>podcast studio</em>
-      </Heading>
-      <Paragraph maxWidth={36}>
-        A studio takes the guesswork out of sound, so every episode matches the
-        one before it. You leave with finished episodes, ready to publish.
-      </Paragraph>
-      <ButtonWrapper>
-        <Button
-          element="link"
-          href="/services/podcast-production"
-          emphasis="secondary"
-        >
-          Podcast Production
-        </Button>
-      </ButtonWrapper>
-      <Img
-        slot="column2"
-        src={audioStandIn}
-        alt=""
-        width={1440}
-        height={1152}
-        animate
-      />
-    </ContentWrapper>
-  </Section>
-
-  <!-- Photography studio -->
-  <Section paddingTop="none">
-    <ContentWrapper variant="columns" column2Class="ratio-5-4">
-      <Eyebrow>Studio 03</Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        Photography <em>studio</em>
-      </Heading>
-      <Paragraph maxWidth={36}>
-        Headshots taken in our studio. We edit every photo and send them online,
-        ready for your website, LinkedIn and print.
-      </Paragraph>
-      <ButtonWrapper>
-        <Button element="link" href="/services" emphasis="secondary">
-          All Services
-        </Button>
-      </ButtonWrapper>
-      <Img
-        slot="column2"
-        src={photoStandIn}
-        alt=""
-        width={1440}
-        height={1152}
-        animate
-      />
-    </ContentWrapper>
+  <!-- Studios -->
+  <Section id="studios" paddingTop="large" gap="medium">
+    <SpacesMain />
   </Section>
 
   <!-- Rates -->
   <Section id="rates" paddingTop="none">
-    <ContentWrapper>
-      <Eyebrow>Rates</Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        By the hour <em>or as a member.</em>
-      </Heading>
-      <Paragraph maxWidth={40}>
-        Book a single session or a regular recording slot. Rates and studio
-        hours are coming soon. Until then, book a discovery call and we'll find
-        the option that fits how often you record.
-      </Paragraph>
-      <Paragraph variant="small" maxWidth={40}>
-        1907 E US Hwy 80, White Oak, TX. You'll work with Richie Rossouw, owner,
-        and Isaac Perez, lead.
-      </Paragraph>
-    </ContentWrapper>
+    <RatesMain />
   </Section>
 </Layout>

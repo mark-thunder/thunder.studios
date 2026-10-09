@@ -1,0 +1,66 @@
+---
+import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
+import ButtonWrapper from "@/components/wrapper/ButtonWrapper.astro";
+import Button from "@/components/Button.astro";
+import Eyebrow from "@/components/typography/Eyebrow.astro";
+import Heading from "@/components/typography/Heading.astro";
+import Paragraph from "@/components/typography/Paragraph.astro";
+import Img from "@/components/media/Img.astro";
+import interview from "@/assets/images/hero-thunder.jpg";
+import audioStandIn from "@/assets/stand-ins/work-vortextech.jpg";
+import photoStandIn from "@/assets/stand-ins/work-quantumflow.jpg";
+import { getOrdered } from "@/utils/ordered.ts";
+import { marks } from "@/utils/marks.ts";
+
+interface Props {
+  /** Set to `false` to omit the component. */
+  render?: boolean;
+}
+
+const { render = true } = Astro.props;
+
+const standIns = [
+  { src: interview, alt: "An interview filmed in the studio" },
+  { src: audioStandIn, alt: "" },
+  { src: photoStandIn, alt: "" },
+];
+
+const spaces = render ? await getOrdered("spaces") : [];
+---
+
+{
+  spaces.map((space, index) => (
+    <ContentWrapper
+      variant="columns"
+      column2Class="ratio-5-4"
+      reverse={index % 2 === 1}
+    >
+      <Eyebrow>{`Studio ${String(index + 1).padStart(2, "0")}`}</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        <Fragment set:html={marks(space.heading)} />
+      </Heading>
+      <Paragraph maxWidth={36}>{space.text}</Paragraph>
+      <ButtonWrapper>
+        <Button
+          element="link"
+          href={
+            space.service?.slug
+              ? `/services/${space.service.slug}`
+              : "/services"
+          }
+          emphasis="secondary"
+        >
+          {space.service?.title ?? "All Services"}
+        </Button>
+      </ButtonWrapper>
+      <Img
+        slot="column2"
+        src={space.photo?.url ?? standIns[index % standIns.length].src}
+        alt={space.photo?.alt ?? standIns[index % standIns.length].alt}
+        width={1440}
+        height={1152}
+        animate
+      />
+    </ContentWrapper>
+  ))
+}

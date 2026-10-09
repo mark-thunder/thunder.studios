@@ -21,21 +21,6 @@ export const NAV_LINKS = [
   { label: "Services", href: "/services" },
   { label: "Contact", href: "/contact" },
 ];
-/** Thunder Media's three video services. `kind` matches the Studio's Type of work; `slug` names the page of each one Studios offers. */
-export const WORK_KINDS = [
-  { kind: "Brand film", label: "Brand Films", slug: "brand-films" },
-  { kind: "Event coverage", label: "Event Coverage", slug: "event-coverage" },
-  {
-    kind: "Podcast production",
-    label: "Podcast Production",
-    slug: "podcast-production",
-  },
-] as const;
-/** The services Thunder Studios offers, in order, by their document id in the Studio it shares with Thunder Media. One with a `kind` has its own page at `/services/<slug>`. */
-export const STUDIO_SERVICES = [
-  "da8fe01c-7463-4cf7-af4e-4d47594e29dd",
-  "00ebd617-ec35-4676-87da-0a72e36e63e0",
-];
 /** The week in order, as the Studio's office hours name the days. */
 export const DAYS = [
   "Monday",
@@ -89,7 +74,7 @@ export const MEDIA_HOSTS = [
 ];
 /** Sanity project and dataset the content collections read at build. Public; the dataset needs no token. */
 export const SANITY = {
-  projectId: "6y1gayk4",
+  projectId: "bbnuxhfu",
   dataset: "production",
   apiVersion: "2026-09-23",
 };

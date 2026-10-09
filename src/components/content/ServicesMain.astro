@@ -4,7 +4,7 @@ import Grid from "@/components/wrapper/Grid.astro";
 import Heading from "@/components/typography/Heading.astro";
 import Card from "@/components/item/Card.astro";
 import { marks } from "@/utils/marks.ts";
-import { getStudioServices } from "@/utils/services.ts";
+import { getOrdered } from "@/utils/ordered.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
@@ -13,7 +13,7 @@ interface Props {
 
 const { render = true } = Astro.props;
 
-const services = render ? await getStudioServices() : [];
+const services = render ? await getOrdered("services") : [];
 ---
 
 {
@@ -33,7 +33,7 @@ const services = render ? await getStudioServices() : [];
             heading={marks(service.heading)}
             headingTag="h3"
             text={service.text}
-            href={service.slug && `/services/${service.slug}`}
+            href={service.slug ? `/services/${service.slug}` : undefined}
             class="heading-accent"
           />
         ))}
