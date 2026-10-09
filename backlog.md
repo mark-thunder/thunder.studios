@@ -30,8 +30,7 @@ acceptance criteria. The top item is the next sprint's goal.
 
 As the owner I want Studios' content in its own Studio so that editing it never touches thunder.media.
 
-- Create the project and dataset · set `projectId` in `../studio-thunder.studios/project.ts` · deploy the schema and the Studio
-- Content: `settings`, three `space` documents, Podcast Production and Headshots & Photography `service`, Richie and Isaac `teamMember`, `plan` once rates are set
+- Content: owner reviews and publishes the drafts (2 `service`, 3 `space`, 2 `teamMember`) · `settings` once the owner checklist is answered · `plan` once rates are set
 - Site: `SANITY` in `consts.ts` → the new project · collections for `space`, `service`, `plan`, `teamMember` · home bands and rates from Sanity · `STUDIO_SERVICES` and `WORK_KINDS` removed
 - Deploy hook on `thunder-studios` + Sanity webhook on publish (drafts off)
 - AC: one Studio publish reaches the site · no Thunder Media content on any page
