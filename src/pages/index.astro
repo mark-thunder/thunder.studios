@@ -1,5 +1,4 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "@/layouts/BaseLayout.astro";
 import Section from "@/components/wrapper/Section.astro";
 import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
@@ -8,49 +7,32 @@ import Button from "@/components/Button.astro";
 import Eyebrow from "@/components/typography/Eyebrow.astro";
 import Heading from "@/components/typography/Heading.astro";
 import Paragraph from "@/components/typography/Paragraph.astro";
-import Card from "@/components/item/Card.astro";
-import Slider from "@/components/interactive/Slider.astro";
 import Img from "@/components/media/Img.astro";
 import Blob from "@/components/media/Blob.astro";
 import Overlay from "@/components/media/Overlay.astro";
-import ClientsMain from "@/components/content/ClientsMain.astro";
-import WorkMain from "@/components/content/WorkMain.astro";
-import ServicesMain from "@/components/content/ServicesMain.astro";
-import { mixReviews, reviewMark } from "@/utils/reviews.ts";
-import { serviceTiles } from "./_tiles.ts";
+import audioStandIn from "@/assets/stand-ins/work-vortextech.jpg";
+import photoStandIn from "@/assets/stand-ins/work-quantumflow.jpg";
 import { getPhotos } from "@/utils/photos.ts";
 
 const photos = await getPhotos();
-
-
-const [tiles, testimonials] = await Promise.all([
-  serviceTiles(),
-  getCollection("testimonials"),
-]);
-const reviews = mixReviews(
-  testimonials.map(({ data }) => data),
-  2,
-);
 ---
 
-<Layout title="Video Production & Event Coverage in East Texas">
+<Layout title="Podcast & Photo Studio in White Oak, TX">
   <!-- Hero -->
   <Section paddingTop="medium" paddingBottom="large" fullHeight>
     <Overlay slot="background" variant="lines" />
     <ContentWrapper variant="columns">
       <Heading tag="h1" class="heading-accent" maxWidth={12}>
-        Thunder is a<br /><em>story-first</em><br />production co.
+        Thunder Studios,<br />a <em>podcast and photo</em><br />studio.
       </Heading>
       <Paragraph variant="large" class="heading-accent" maxWidth={36}>
-        We make brand films, event coverage and podcasts for businesses across
-        East Texas. <em>Book a 20-minute discovery call today.</em>
+        Three studios under one roof in White Oak, a short drive west of
+        Longview. <em>Book by the hour or as a member.</em>
       </Paragraph>
       <ButtonWrapper>
-        <Button element="link" href="/contact">
-          Book a Discovery Call
-        </Button>
-        <Button element="link" href="/work" emphasis="secondary">
-          Our Work
+        <Button element="link" href="/contact">Book a Discovery Call</Button>
+        <Button element="link" href="#studios" emphasis="secondary">
+          See the Studios
         </Button>
       </ButtonWrapper>
       <Blob
@@ -63,55 +45,24 @@ const reviews = mixReviews(
     </ContentWrapper>
   </Section>
 
-  <!-- Trusted by -->
-  <Section paddingTop="small" paddingBottom="small">
-    <ClientsMain
-      variant="split"
-      label="Trusted by organizations across East Texas and beyond"
-    />
-  </Section>
-
-  <!-- Services -->
-  <Section id="services" paddingTop="large" gap="7">
-    <ServicesMain variant="rows" />
-  </Section>
-
-  <!-- Recent work -->
-  <Section id="work" paddingTop="none" align="center">
-    <ContentWrapper centered>
-      <Heading tag="h2">Recent work</Heading>
-    </ContentWrapper>
-    <WorkMain variant="gallery">
-      {
-        tiles.map((tile) => (
-          <Card
-            variant="caption"
-            image={tile.image}
-            imageAlt={tile.imageAlt}
-            heading={tile.label}
-            headingTag="h3"
-            text={tile.text}
-            href={tile.href}
-          />
-        ))
-      }
-    </WorkMain>
-    <ButtonWrapper>
-      <Button element="link" href="/work">See All Work</Button>
-    </ButtonWrapper>
-  </Section>
-
-  <!-- Why Thunder -->
-  <Section id="why" paddingTop="none">
+  <!-- Video podcast studio -->
+  <Section id="studios" paddingTop="large">
     <ContentWrapper variant="columns" column2Class="ratio-5-4">
-      <Eyebrow>Why Thunder</Eyebrow>
+      <Eyebrow>Studio 01</Eyebrow>
       <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        We don't just <strong>point cameras.</strong>{" "}
-        <em>We tell stories that move people.</em>
+        Video <em>podcast studio</em>
       </Heading>
+      <Paragraph maxWidth={36}>
+        Sit down and talk. We run the cameras and microphones, then edit the
+        episode and the clips for every platform.
+      </Paragraph>
       <ButtonWrapper>
-        <Button element="link" href="/about" emphasis="secondary">
-          Our Story
+        <Button
+          element="link"
+          href="/services/podcast-production"
+          emphasis="secondary"
+        >
+          Podcast Production
         </Button>
       </ButtonWrapper>
       <Img
@@ -125,19 +76,80 @@ const reviews = mixReviews(
     </ContentWrapper>
   </Section>
 
-  <!-- Reviews -->
-  <Section id="review" paddingTop="none" render={reviews.length > 0}>
-    <Slider label="Reviews" variant="contained" xsmall={1} autoplay={7}>
-      {
-        reviews.map(({ quote, name, source }) => (
-          <Card
-            variant="quote"
-            icon={reviewMark(source)}
-            text={`“${quote}”`}
-            meta={`${name} · ${source}`}
-          />
-        ))
-      }
-    </Slider>
+  <!-- Audio podcast studio -->
+  <Section paddingTop="none">
+    <ContentWrapper variant="columns" column2Class="ratio-5-4" reverse>
+      <Eyebrow>Studio 02</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Audio <em>podcast studio</em>
+      </Heading>
+      <Paragraph maxWidth={36}>
+        A studio takes the guesswork out of sound, so every episode matches the
+        one before it. You leave with finished episodes, ready to publish.
+      </Paragraph>
+      <ButtonWrapper>
+        <Button
+          element="link"
+          href="/services/podcast-production"
+          emphasis="secondary"
+        >
+          Podcast Production
+        </Button>
+      </ButtonWrapper>
+      <Img
+        slot="column2"
+        src={audioStandIn}
+        alt=""
+        width={1440}
+        height={1152}
+        animate
+      />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Photography studio -->
+  <Section paddingTop="none">
+    <ContentWrapper variant="columns" column2Class="ratio-5-4">
+      <Eyebrow>Studio 03</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        Photography <em>studio</em>
+      </Heading>
+      <Paragraph maxWidth={36}>
+        Headshots taken in our studio. We edit every photo and send them online,
+        ready for your website, LinkedIn and print.
+      </Paragraph>
+      <ButtonWrapper>
+        <Button element="link" href="/services" emphasis="secondary">
+          All Services
+        </Button>
+      </ButtonWrapper>
+      <Img
+        slot="column2"
+        src={photoStandIn}
+        alt=""
+        width={1440}
+        height={1152}
+        animate
+      />
+    </ContentWrapper>
+  </Section>
+
+  <!-- Rates -->
+  <Section id="rates" paddingTop="none">
+    <ContentWrapper>
+      <Eyebrow>Rates</Eyebrow>
+      <Heading tag="h2" class="heading-accent" maxWidth={14}>
+        By the hour <em>or as a member.</em>
+      </Heading>
+      <Paragraph maxWidth={40}>
+        Book a single session or a regular recording slot. Rates and studio
+        hours are coming soon. Until then, book a discovery call and we'll find
+        the option that fits how often you record.
+      </Paragraph>
+      <Paragraph variant="small" maxWidth={40}>
+        1907 E US Hwy 80, White Oak, TX. You'll work with Richie Rossouw, owner,
+        and Isaac Perez, lead.
+      </Paragraph>
+    </ContentWrapper>
   </Section>
 </Layout>

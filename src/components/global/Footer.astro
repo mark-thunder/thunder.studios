@@ -1,5 +1,4 @@
 ---
-import { getCollection } from "astro:content";
 import Img from "@/components/media/Img.astro";
 import Grid from "@/components/wrapper/Grid.astro";
 import Paragraph from "@/components/typography/Paragraph.astro";
@@ -13,11 +12,10 @@ import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
 import {
   NAV_LINKS,
   LEGAL_LINKS,
-  WORK_KINDS,
-  LOCATION_ROLES,
   SOCIALS,
 } from "@/consts.ts";
 import { getBusiness } from "@/utils/business.ts";
+import { getStudioServices } from "@/utils/services.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
@@ -45,37 +43,20 @@ const {
 const split = variant === "split";
 const cta = variant === "cta";
 
-const [business, services, locations] = await Promise.all([
+const [business, services] = await Promise.all([
   getBusiness(),
-  render ? getCollection("services") : [],
-  render ? getCollection("locations") : [],
+  render ? getStudioServices() : [],
 ]);
-
-/* Each column is a heading and its links, in the order the site is built:
-   video services, the places we film, then the rest of the site. */
+/* Each column is a heading and its links: the services, then the rest of the site. */
 const columns = [
   {
     id: "footer-services",
     label: "Services",
     links: [
-      ...WORK_KINDS.filter(({ kind }) =>
-        services.some(({ data }) => data.kind === kind),
-      ).map(({ label, slug }) => ({ label, href: `/services/${slug}` })),
+      ...services.flatMap(({ label, slug }) =>
+        label && slug ? [{ label, href: `/services/${slug}` }] : [],
+      ),
       { label: "All Services", href: "/services" },
-    ],
-  },
-  {
-    id: "footer-locations",
-    label: "Locations",
-    links: [
-      ...locations.map(({ data }) => ({
-        label:
-          data.role === "service-area"
-            ? `${data.city}, ${data.state}`
-            : `${data.city}, ${data.state} · ${LOCATION_ROLES[data.role]}`,
-        href: `/locations/${data.slug}`,
-      })),
-      { label: "All Locations", href: "/locations" },
     ],
   },
   {
@@ -139,7 +120,7 @@ const columns = [
             <div class="footer_split">
               <div class="footer_side">
                 <Eyebrow variant="tag">Links</Eyebrow>
-                <Grid medium={3} animate={false}>
+                <Grid medium={2} animate={false}>
                   {columns.map(({ id, label, links }) => (
                     <nav class="footer_group" aria-labelledby={id}>
                       <Paragraph id={id} variant="large" class="footer_label">

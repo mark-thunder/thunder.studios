@@ -1,12 +1,11 @@
 ---
-import { getCollection } from "astro:content";
 import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
 import Grid from "@/components/wrapper/Grid.astro";
 import Heading from "@/components/typography/Heading.astro";
 import Card from "@/components/item/Card.astro";
 import { icons } from "@/utils/icons.ts";
 import { marks } from "@/utils/marks.ts";
-import { WORK_KINDS } from "@/consts.ts";
+import { getStudioServices } from "@/utils/services.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
@@ -18,12 +17,7 @@ interface Props {
 const { render = true, variant = "cards" } = Astro.props;
 const rows = variant === "rows";
 
-const services = render
-  ? (await getCollection("services")).flatMap(({ data }) => {
-      const slug = WORK_KINDS.find(({ kind }) => kind === data.kind)?.slug;
-      return slug ? [{ ...data, slug }] : [];
-    })
-  : [];
+const services = render ? await getStudioServices() : [];
 ---
 
 {
@@ -36,7 +30,7 @@ const services = render
           class="heading-accent"
           maxWidth={rows ? 40 : undefined}
         >
-          We do three things, <em>and we do them well.</em>
+          Podcasts and photos, <em>under one roof.</em>
         </Heading>
       </ContentWrapper>
       <Grid large={rows ? 1 : 3} class={rows ? "services-main_wrap" : undefined}>
@@ -49,7 +43,7 @@ const services = render
             heading={marks(service.heading)}
             headingTag="h3"
             text={service.text}
-            href={`/services/${service.slug}`}
+            href={service.slug && `/services/${service.slug}`}
             class="heading-accent"
           />
         ))}

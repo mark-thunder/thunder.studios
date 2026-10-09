@@ -1,13 +1,12 @@
 /** Fallback meta description for pages that don't set their own. */
 export const SITE_DESCRIPTION =
-  "Thunder Media makes brand films, event coverage and podcasts for businesses across East Texas from our Longview office. Book a 20-minute discovery call today.";
+  "Thunder Studios in White Oak, Texas, holds a video podcast studio, an audio podcast studio and a photography studio. Our crew runs the cameras, microphones and edit.";
 /** Canonical origin. Resolves canonical URLs, social images, and the sitemap. */
 export const SITE_URL = "https://www.thunder.media";
 /** BCP 47 locale tag used to format dates and numbers. */
 export const SITE_LOCALE = "en-US";
 /** Routes excluded from search and the sitemap. Surrounding slashes are ignored. */
 export const NOINDEX_ROUTES: string[] = ["/404", "/example-components"];
-/** The second design lives under this path. Search and the sitemap skip every route inside it until it is promoted. */
 /** Whether the site is public. Until it is, every page is noindex and the sitemap is empty. */
 export const LAUNCHED = false;
 /**
@@ -19,13 +18,10 @@ export const VIEWPORT_MAX = 1440;
 /** The site's pages, in the order the nav and footer list them. */
 export const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Our Work", href: "/work" },
-  { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
-  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
-/** The three video services, each with its own page at `/services/<slug>`. `kind` matches the Studio's Type of work. */
+/** Thunder Media's three video services. `kind` matches the Studio's Type of work; `slug` names the page of each one Studios offers. */
 export const WORK_KINDS = [
   { kind: "Brand film", label: "Brand Films", slug: "brand-films" },
   { kind: "Event coverage", label: "Event Coverage", slug: "event-coverage" },
@@ -35,6 +31,11 @@ export const WORK_KINDS = [
     slug: "podcast-production",
   },
 ] as const;
+/** The services Thunder Studios offers, in order, by their document id in the Studio it shares with Thunder Media. One with a `kind` has its own page at `/services/<slug>`. */
+export const STUDIO_SERVICES = [
+  "da8fe01c-7463-4cf7-af4e-4d47594e29dd",
+  "00ebd617-ec35-4676-87da-0a72e36e63e0",
+];
 /** What Thunder has in a location, as the Studio stores it and as the page names it. */
 export const LOCATION_ROLES = {
   headquarters: "Headquarters",

@@ -2,14 +2,7 @@
 import Layout from "@/layouts/BaseLayout.astro";
 import HeroMain from "@/components/section/HeroMain.astro";
 import Button from "@/components/Button.astro";
-
-
-const pages = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Services", href: "/services" },
-  { label: "Contact", href: "/contact" },
-];
+import { NAV_LINKS } from "@/consts.ts";
 ---
 
 <Layout
@@ -27,7 +20,7 @@ const pages = [
     align="center"
   >
     {
-      pages.map(({ label, href }) => (
+      NAV_LINKS.map(({ label, href }) => (
         <Button element="link" href={href} variant="link">
           {label}
         </Button>

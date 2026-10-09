@@ -2,11 +2,9 @@
 import { defineConfig, envField, fontProviders } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 import { SITE_URL, MEDIA_HOSTS, LAUNCHED } from "./src/consts.ts";
-import { isNoindexRoute, thinLocationPaths } from "./src/utils/seo.ts";
+import { isNoindexRoute } from "./src/utils/seo.ts";
 
 import cloudflare from "@astrojs/cloudflare";
-
-const thinLocations = new Set(await thinLocationPaths());
 
 export default defineConfig({
   site: SITE_URL,
@@ -16,9 +14,7 @@ export default defineConfig({
   integrations: LAUNCHED
     ? [
         sitemap({
-          filter: (page) =>
-            !isNoindexRoute(new URL(page).pathname) &&
-            !thinLocations.has(new URL(page).pathname.replace(/\/$/, "")),
+          filter: (page) => !isNoindexRoute(new URL(page).pathname),
         }),
       ]
     : [],

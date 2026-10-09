@@ -6,22 +6,11 @@ import { getBusiness } from "@/utils/business.ts";
 interface Props {
   /** Set to `false` to omit the component. */
   render?: boolean;
-  /** A city we film in, such as `Tyler, TX`. Describes the page as video production there, offered by the business, in place of the business itself. */
-  area?: string;
-  /** A blog post. Describes the page as that post, written by its author and published by the business. */
-  article?: {
-    headline: string;
-    image: string;
-    datePublished: Date;
-    dateModified: Date;
-    author?: { name: string } | null;
-  };
 }
 
-const { render = true, area, article } = Astro.props;
+const { render = true } = Astro.props;
 
-const locations =
-  render && !area && !article ? await getCollection("locations") : [];
+const locations = render ? await getCollection("locations") : [];
 const company = await getBusiness();
 
 const business = {
@@ -55,30 +44,6 @@ const business = {
     name: `${data.city}, ${data.state}`,
   })),
 };
-
-const service = area && {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  serviceType: "Video production",
-  url: Astro.url.href,
-  provider: { "@id": business["@id"] },
-  areaServed: { "@type": "City", name: area },
-};
-const post = article && {
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  headline: article.headline,
-  image: new URL(article.image, SITE_URL).href,
-  datePublished: article.datePublished.toISOString(),
-  dateModified: article.dateModified.toISOString(),
-  author: article.author && {
-    "@type": "Person",
-    name: article.author.name,
-    url: new URL("/about/#team", SITE_URL).href,
-  },
-  publisher: { "@id": business["@id"] },
-  mainEntityOfPage: Astro.url.href,
-};
 ---
 
 {
@@ -86,7 +51,7 @@ const post = article && {
     <script
       is:inline
       type="application/ld+json"
-      set:html={JSON.stringify(post || service || business)}
+      set:html={JSON.stringify(business)}
     />
   )
 }

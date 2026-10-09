@@ -5,18 +5,13 @@ import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
 import Button from "@/components/Button.astro";
 import Img from "@/components/media/Img.astro";
 import HeroMain from "@/components/section/HeroMain.astro";
-import WorkMain from "@/components/content/WorkMain.astro";
-import ProcessMain from "@/components/content/ProcessMain.astro";
+import standIn from "@/assets/stand-ins/work-nexacore.jpg";
 import { marks } from "@/utils/marks.ts";
 import { servicePaths } from "@/utils/paths.ts";
-import { serviceTiles } from "../_tiles.ts";
 
 export const getStaticPaths = servicePaths;
 
-const { kind, title, heading, text } = Astro.props;
-const tile = (await serviceTiles()).find(({ href }) =>
-  href.endsWith(Astro.params.slug),
-);
+const { title, heading, text, image } = Astro.props;
 ---
 
 <Layout title={title} description={text}>
@@ -37,19 +32,14 @@ const tile = (await serviceTiles()).find(({ href }) =>
   </HeroMain>
 
   <!-- Picture -->
-  <Section paddingTop="none" paddingBottom="none" render={!!tile}>
+  <Section paddingTop="none">
     <ContentWrapper column1Class="ratio-2-1">
-      <Img src={tile!.image} alt={tile!.imageAlt} loading="eager" animate />
+      <Img
+        src={image?.url ?? standIn}
+        alt={image?.alt ?? ""}
+        loading="eager"
+        animate
+      />
     </ContentWrapper>
-  </Section>
-
-  <!-- Case studies -->
-  <Section id="work">
-    <WorkMain variant="gallery" kind={kind} />
-  </Section>
-
-  <!-- How we work -->
-  <Section id="process" paddingTop="none">
-    <ProcessMain variant="numbers" />
   </Section>
 </Layout>

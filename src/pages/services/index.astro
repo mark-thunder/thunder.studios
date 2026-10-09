@@ -1,96 +1,40 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "@/layouts/BaseLayout.astro";
 import Section from "@/components/wrapper/Section.astro";
 import ContentWrapper from "@/components/wrapper/ContentWrapper.astro";
-import Grid from "@/components/wrapper/Grid.astro";
 import Button from "@/components/Button.astro";
-import Eyebrow from "@/components/typography/Eyebrow.astro";
-import Heading from "@/components/typography/Heading.astro";
-import Paragraph from "@/components/typography/Paragraph.astro";
-import Card from "@/components/item/Card.astro";
 import Img from "@/components/media/Img.astro";
 import HeroMain from "@/components/section/HeroMain.astro";
 import ServicesMain from "@/components/content/ServicesMain.astro";
-import ProcessMain from "@/components/content/ProcessMain.astro";
-import LocationsMain from "@/components/content/LocationsMain.astro";
-import { marks } from "@/utils/marks.ts";
 import { getPhotos } from "@/utils/photos.ts";
 
 const photos = await getPhotos();
-
-const marketing = await getCollection("services", ({ data }) => !data.kind);
-const other = (await getCollection("settings"))[0]?.data.otherServices;
 ---
 
 <Layout
-  title="Video Production & Full-Service Marketing"
-  description="We make brand films, event coverage and podcasts first, then add ads, websites and the rest of the launch when you need them."
+  title="Podcast Studio & Photography in White Oak, TX"
+  description="Record a video or audio podcast, or get headshots taken, at Thunder Studios in White Oak. Our crew runs the cameras, microphones and edit."
 >
   <!-- Title -->
   <HeroMain
     variant="lines"
     heading="Services"
     headingVariant="display"
-    text="We start with video and add full service when you need it. <em>We're a production company first. When a film needs ads to carry it or a website to land on, we build those too.</em>"
+    text="Record a podcast or get your headshots taken in White Oak. <em>Our crew runs the cameras, microphones and edit, so you can focus on the conversation.</em>"
     align="center"
   >
     <Button element="link" href="/contact">Book a Discovery Call</Button>
   </HeroMain>
 
-  <!-- Video production -->
-  <Section id="video" paddingTop="none" gap="7">
+  <!-- Services -->
+  <Section id="services" paddingTop="none" gap="7">
     <ServicesMain variant="rows" />
   </Section>
 
-  <!-- Other services -->
-  <Section id="full-service" render={marketing.length > 0}>
-    <ContentWrapper variant="sticky-content">
-      <Eyebrow>
-        <Fragment set:html={other?.eyebrow} />
-      </Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        <Fragment set:html={marks(other?.heading)} />
-      </Heading>
-      <Paragraph maxWidth={36}>
-        <Fragment set:html={other?.text} />
-      </Paragraph>
-      <Grid slot="column2">
-        {
-          marketing.map(({ data }) => (
-            <Card
-              variant="bare"
-              heading={marks(data.heading)}
-              headingTag="h3"
-              text={data.text}
-              class="heading-accent"
-            />
-          ))
-        }
-      </Grid>
-    </ContentWrapper>
-  </Section>
-
   <!-- Picture -->
-  <Section paddingTop="none" paddingBottom="none">
+  <Section paddingTop="none">
     <ContentWrapper column1Class="ratio-2-1">
       <Img src={photos.services.src} animate />
     </ContentWrapper>
-  </Section>
-
-  <!-- How we work -->
-  <Section id="process" paddingTop="large">
-    <ProcessMain variant="numbers" />
-  </Section>
-
-  <!-- Where we film -->
-  <Section id="locations" paddingTop="none">
-    <ContentWrapper>
-      <Eyebrow>Locations</Eyebrow>
-      <Heading tag="h2" class="heading-accent" maxWidth={14}>
-        We film across East Texas <em>and beyond.</em>
-      </Heading>
-    </ContentWrapper>
-    <LocationsMain />
   </Section>
 </Layout>
