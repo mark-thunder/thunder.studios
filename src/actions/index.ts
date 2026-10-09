@@ -62,7 +62,7 @@ async function spamProbability(state: string) {
     is_spam: {
       type: "noul",
       instructions:
-        "This is unsolicited spam, a scam, or an automated message, not a genuine enquiry about video, photo or podcast production.",
+        "This is unsolicited spam, a scam, or an automated message, not a genuine request to book a podcast, video or photography studio.",
     },
   });
   const noul = answers?.is_spam?.noul;
@@ -75,12 +75,12 @@ async function followUpKey(state: string) {
     FOLLOW_UPS.map(({ key, criteria }) => [key, criteria]),
   );
   criteria.none =
-    "Anything that is not a real request to hire a production company: spam, SEO or link offers, sales pitches, job applications, or nonsense. Also a real enquiry that already says everything a producer needs, or one too short to judge.";
+    "Anything that is not a real request to book a studio: spam, SEO or link offers, sales pitches, job applications, or nonsense. Also a real request that already says everything the studio needs, or one too short to judge.";
   const answers = await askJev(state, {
     follow_up: {
       type: "choice",
       instructions:
-        "A visitor is filling in the contact form of a video, photo, podcast and marketing production company. Which single follow-up question would most help the producer prepare for the first call?",
+        "A visitor is asking to book a podcast, video or photography studio. Which single follow-up question would most help the studio prepare the session?",
       criteria,
     },
   });
@@ -94,16 +94,14 @@ async function followUpKey(state: string) {
 export const server = {
   followUp: defineAction({
     input: z.object({
-      service: z.string().max(200).nullish(),
-      timeline: z.string().max(200).nullish(),
-      budget: z.string().max(200).nullish(),
+      studio: z.string().max(200).nullish(),
+      length: z.string().max(200).nullish(),
       message: z.string().min(20).max(2000),
     }),
     handler: async (input) => {
       const state = [
-        `Service: ${input.service ?? ""}`,
-        `Timeline: ${input.timeline ?? ""}`,
-        `Budget: ${input.budget ?? ""}`,
+        `Studio: ${input.studio ?? ""}`,
+        `Length: ${input.length ?? ""}`,
         `Message: ${input.message}`,
       ].join("\n");
       return { key: await followUpKey(state) };
@@ -114,12 +112,11 @@ export const server = {
     accept: "form",
     input: z.object({
       name: z.string().min(1),
-      company: z.string().max(200).nullish(),
       email: z.email(),
       phone: z.string().nullish(),
-      service: z.string().nullish(),
-      timeline: z.string().nullish(),
-      budget: z.string().nullish(),
+      studio: z.string().max(200).nullish(),
+      date: z.string().max(20).nullish(),
+      length: z.string().max(200).nullish(),
       message: z.string().nullish(),
       smsConsent: z.literal("yes").nullish(),
       followUpQuestion: z.string().max(200).nullish(),
@@ -145,12 +142,11 @@ export const server = {
 
       const state = [
         `Name: ${enquiry.name}`,
-        `Company: ${enquiry.company ?? ""}`,
         `Email: ${enquiry.email}`,
         `Phone: ${enquiry.phone ?? ""}`,
-        `Service: ${enquiry.service ?? ""}`,
-        `Timeline: ${enquiry.timeline ?? ""}`,
-        `Budget: ${enquiry.budget ?? ""}`,
+        `Studio: ${enquiry.studio ?? ""}`,
+        `Preferred date: ${enquiry.date ?? ""}`,
+        `Length: ${enquiry.length ?? ""}`,
         `Message: ${enquiry.message ?? ""}`,
         `${enquiry.followUpQuestion ?? "Follow-up"}: ${enquiry.followUpAnswer ?? ""}`,
       ].join("\n");
@@ -165,16 +161,15 @@ export const server = {
         /* GHL keeps first and last names apart; the form asks for one name. */
         firstName: enquiry.name.trim().split(/\s+/)[0],
         lastName: enquiry.name.trim().split(/\s+/).slice(1).join(" "),
-        company: enquiry.company ?? "",
         /* GHL names the opportunity from this, so it never starts blank. */
-        opportunityName: [enquiry.company || enquiry.name, enquiry.service]
+        opportunityName: [enquiry.name, enquiry.studio]
           .filter(Boolean)
           .join(" – "),
         email: enquiry.email,
         phone: enquiry.phone ?? "",
-        service: enquiry.service ?? "",
-        timeline: enquiry.timeline ?? "",
-        budget: enquiry.budget ?? "",
+        studio: enquiry.studio ?? "",
+        date: enquiry.date ?? "",
+        length: enquiry.length ?? "",
         message: enquiry.message ?? "",
         /* Matches the options of GHL's SMS consent checkbox field. */
         smsConsent: enquiry.smsConsent === "yes" ? "Yes" : "No",

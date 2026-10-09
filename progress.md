@@ -47,6 +47,7 @@ Home, Services, one page per service with a page address
 | A service has a page when it has a page address (`slug`) | A list of service ids in the code | The editor decides in the Studio; one source (PoSD) |
 | `@sanity/client` in a content loader, GROQ projecting only the fields the site uses, Zod schemas in `content.config.ts` | `@sanity/astro` + TypeGen | Build-time reads keep `getCollection()` and schema checks with no React; Sanity GROQ rules: always project |
 | One action everywhere, "Request a Session" (contact form), and a closing card "Book a studio session." | "Book a Discovery Call" and "Your next project starts with a 20-minute call" | Owner 10-09: match rental studios; studios without instant booking take a session request and confirm in writing (Studio Terms) |
+| Session request asks name, email, phone, studio (the Studio's `space` titles plus "Not sure yet"), preferred date, length (1–2 hours, half day, full day), message, one Jev follow-up (podcast setup, photo shoot, one-off or regular) and SMS consent; GHL gets `studio`, `date`, `length` | Thunder Media's company, service, timeline and budget | Rental studios ask which room, when and how long (Inferred); rates are not set, so no budget question; rooms stay one source in Sanity (PoSD) |
 | One `LAUNCHED` switch for noindex, sitemap and the robots Sitemap line | Per-page noindex | One decision in one place (PoSD) |
 | Copy states only confirmed facts (owner or published Sanity); open ones (rates, hours) say "coming soon" | Writing rates and hours from other studios | Owner 10-08: accurate copy, updated later |
 | Four policies in `src/content/legal`: Privacy, Terms of Use and Cookies describe only what this site runs (no analytics or chat; one `theme` storage key); Studio Terms covers sessions, with prices, cancellation windows and overtime left to each booking confirmation | Copying thunder.media's policies; numbers taken from other studios | Owner 10-09; studio terms follow the common outline of published studio terms (booking, cancellation, use, damage, safety, content ownership, law); Texas one-party recording consent per Texas State Law Library |
@@ -88,7 +89,6 @@ alt on every image (`shared/image-with-alt.ts`).
 ## Debts
 
 - Contact form unproven: it needs a Turnstile widget listing Studios' hostname (Cloudflare: a hostname covers its subdomains), its keys in the Worker (`PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`), and the secrets `JEV_API_KEY` and `GHL_WEBHOOK_URL`; then one test enquiry.
-- Contact form options (services, budgets) are film-production choices that feed GHL; they change with booking.
 - `LocalBusiness` `@id` and canonical URLs use `SITE_URL` (thunder.media) and `sameAs` lists Thunder Media's profiles until Studios has a domain and profiles.
 - Policies published without attorney review (as for thunder.media); `studio-terms` stays a draft until the owner settles its choices (backlog checklist).
 - `RichText` portable text and `SanityMedia` have nothing to render: the Studio has no rich-text field yet.

@@ -9,38 +9,24 @@ export interface FollowUp {
 /** Every follow-up the form can ask, at most one per enquiry. Keys are what the server returns. */
 export const FOLLOW_UPS: FollowUp[] = [
   {
-    key: "event_scale",
-    question: "How many days is it, and about how many people?",
-    placeholder: "Two days, about 400 people",
-    criteria:
-      "An event, conference, expo, summit or live show where the number of days and the size of the crowd are not yet stated.",
-  },
-  {
-    key: "location",
-    question: "Where will we shoot?",
-    placeholder: "City, and the venue if you know it",
-    criteria:
-      "A shoot whose city or venue is not yet stated, especially anything outside Longview, Texas.",
-  },
-  {
-    key: "film_use",
-    question: "Where will people watch the finished film?",
-    placeholder: "Website, a sales meeting, social ads…",
-    criteria:
-      "A brand film, documentary, commercial or testimonial where it is not yet stated where the finished video will be shown.",
-  },
-  {
     key: "podcast_setup",
-    question: "How many hosts and guests, and do you have a studio?",
-    placeholder: "One host, a guest each week, no studio yet",
+    question: "How many hosts and guests, and do you need an engineer?",
+    placeholder: "Two hosts, one guest, we'd like someone running the board",
     criteria:
-      "A podcast where the number of hosts or guests, or whether they have a studio, is not yet stated.",
+      "A podcast or interview recording where the number of people at the mics, or whether they want an engineer, is not yet stated.",
   },
   {
-    key: "marketing_goal",
-    question: "What would a good result look like in 90 days?",
-    placeholder: "Twenty booked calls a month from the website",
+    key: "photo_shoot",
+    question: "How many people, and how many looks?",
+    placeholder: "Six headshots, one outfit each",
     criteria:
-      "Ongoing marketing, social content, ads or a retainer where the goal or the result they want is not yet stated.",
+      "A photo shoot or headshots where the number of people or looks is not yet stated, or whether they bring their own photographer.",
+  },
+  {
+    key: "recurring",
+    question: "Is this a one-off, or a regular slot?",
+    placeholder: "Every other Tuesday morning",
+    criteria:
+      "A show, series or ongoing content where it is not yet stated whether they want one session or a regular booking.",
   },
 ];

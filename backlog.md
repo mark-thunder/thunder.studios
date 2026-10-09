@@ -38,7 +38,6 @@ As a creator I want to book studio time by the hour or as a member so that I can
 
 - Choose: GHL calendar embed (fast, takes payment, GHL's look and scripts) or a Lumos booking component in `components/form`, with an Astro Action reading GHL's open slots and creating the appointment behind Turnstile (T Ricks Stated 2026-02-14 multi-step visit form; 2026-09-11 a form is its own component). Check GHL's calendar API before building the second
 - Membership: GHL recurring product → tag → members' calendar
-- Contact form options change to studio choices with it
 - AC: a test booking shows in the GHL calendar in Stripe test mode
 
 ### 3 · Launch

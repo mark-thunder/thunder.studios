@@ -14,6 +14,7 @@ import Textarea from "@/components/form/Textarea.astro";
 import Choice from "@/components/form/Choice.astro";
 import FollowUp from "@/components/form/FollowUp.astro";
 import { FOLLOW_UPS } from "@/utils/followUps.ts";
+import { getOrdered } from "@/utils/ordered.ts";
 
 interface Props {
   /** Set to `false` to omit the component. */
@@ -39,44 +40,18 @@ const followUps = FOLLOW_UPS.map(({ key, question, placeholder }) => ({
   placeholder,
 }));
 
-const services = [
-  "Brand Film or Documentary",
-  "Conference / Expo / Summit Coverage",
-  "Podcast Production",
-  "Full-Service Marketing",
-  "Agency / White-Label Production",
+/* The rooms come from the Studio, so a new space shows up here too. */
+const studios = [
+  ...(await getOrdered("spaces")).map((space) => space.title),
   "Not sure yet",
 ];
 
-/* The two questions that tell a real enquiry from a maybe: when and how much. */
-const timelines = [
-  "This month",
-  "In the next 1–3 months",
-  "3+ months out",
-  "Just exploring",
-];
-
-/* One question, two kinds of buyer. The bands say who we are for without a
-   rate card: every price is built to the scope. */
-const budgets = [
-  {
-    group: "One project",
-    options: [
-      "Under $5,000",
-      "$5,000 – $15,000",
-      "$15,000 – $50,000",
-      "$50,000+",
-    ],
-  },
-  {
-    group: "Every month",
-    options: [
-      "Under $5,000 a month",
-      "$5,000 – $10,000 a month",
-      "$10,000 – $20,000 a month",
-      "$20,000+ a month",
-    ],
-  },
+/* Studios charge by the hour or the session (Studio Terms). */
+const lengths = [
+  "1–2 hours",
+  "Half day (4 hours)",
+  "Full day (8 hours)",
+  "Not sure yet",
 ];
 ---
 
@@ -108,53 +83,51 @@ const budgets = [
               variant="email"
               label="Email"
               name="email"
-              placeholder="you@company.com"
+              placeholder="you@example.com"
               required
             />
           </Grid>
           <Grid medium={2}>
-            <Input variant="company" name="company" placeholder="" />
             <Input
               variant="phone"
               label="Phone"
               name="phone"
               placeholder="(903) 555-0000"
             />
-          </Grid>
-          <Select
-            label="Service"
-            name="service"
-            placeholder="What do you need?"
-            options={services}
-            required
-          />
-          <Grid medium={2}>
             <Select
-              label="When do you need it?"
-              name="timeline"
-              placeholder="Pick a timeframe"
-              options={timelines}
+              label="Studio"
+              name="studio"
+              placeholder="Which room?"
+              options={studios}
               required
             />
+          </Grid>
+          <Grid medium={2}>
+            <Input
+              variant="date"
+              label="Preferred date"
+              name="date"
+              autocomplete="off"
+            />
             <Select
-              label="Budget range"
-              name="budget"
-              placeholder="Pick a range"
-              options={budgets}
+              label="How long?"
+              name="length"
+              placeholder="Pick a length"
+              options={lengths}
               required
             />
           </Grid>
           <Textarea
-            label="Tell us about your project"
+            label="Tell us about your session"
             name="message"
-            placeholder="What's the goal? When is it? Any budget in mind?"
+            placeholder="What are you recording or shooting, and how many people are coming?"
             minLines={5}
           />
           <FollowUp questions={followUps} />
           <Choice
             name="smsConsent"
             value="yes"
-            label="Text me about my enquiry at the number above. Message and data rates may apply. Reply STOP to opt out. Not required to work with us."
+            label="Text me about my session request at the number above. Message and data rates may apply. Reply STOP to opt out. Not required to work with us."
           />
         </Fieldset>
         <ButtonWrapper slot="submit">

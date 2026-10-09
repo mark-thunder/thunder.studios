@@ -67,9 +67,8 @@ const { render = true, questions = [], after = "message" } = Astro.props;
       say("Reading your project…");
 
       const { data } = await actions.followUp({
-        service: value("service"),
-        timeline: value("timeline"),
-        budget: value("budget"),
+        studio: value("studio"),
+        length: value("length"),
         message,
       });
 
