@@ -28,7 +28,7 @@ commit, by editing what it changes, never by appending:
 | Site | `mark-thunder/thunder.studios`, Worker `thunder-studios` (owner account `9894a904…`), thunder-studios.richie-989.workers.dev · no domain · `LAUNCHED = false` in `consts.ts`: every page noindex, no sitemap, no analytics or chat |
 | Deploy | Workers Builds on push to `main` (`npx astro build` · `npx wrangler deploy` · build var `PUBLIC_TURNSTILE_SITE_KEY`) · no Sanity deploy hook yet, so content changes reach the site only on a push |
 | Content | Reads Thunder Media's Sanity project (`6y1gayk4` / `production`) at build: `service`, `settings`, `location`. Policies from `src/content/legal` |
-| Studio | `mark-thunder/thunder.studios-cms`, local `../studio-thunder.studios`, project `bbnuxhfu` / `production` (public, org Thunder Media), Studio at thunderstudios.sanity.studio · schema `settings`, `space`, `service`, `plan`, `teamMember` deployed · drafts: 2 services, 3 spaces, 2 team members; no `settings` or `plan` yet |
+| Studio | `mark-thunder/thunder.studios-cms`, local `../studio-thunder.studios`, project `bbnuxhfu` / `production` (public, org Thunder Media), Studio at thunderstudios.sanity.studio · schema `settings`, `space`, `service`, `plan`, `teamMember` deployed · drafts: 2 services, 3 spaces, 2 team members, `settings` (Thunder Studios, Thunder Films LLC, same phone and email as Thunder Media); no `plan` yet |
 | Origin | The v2 design of thunder.media (`../portfolio`, branch `v2`), moved here as its own site |
 
 ## Pages
